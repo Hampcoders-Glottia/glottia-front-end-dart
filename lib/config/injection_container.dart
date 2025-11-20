@@ -1,10 +1,11 @@
 // lib/config/injection_container.dart
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+// import 'core/network/network_info.dart';
 import '../features/authentication/domain/repositories/auth_repository.dart';
 import '../features/authentication/data/repositories/auth_repository_impl.dart';
 import '../features/authentication/domain/usecases/login_user.dart';
-// --- 1. Importa el nuevo caso de uso ---
+
 import '../features/authentication/domain/usecases/register_user.dart';
 import '../features/authentication/presentation/bloc/auth_bloc.dart';
 import '../features/authentication/data/datasources/auth_remote_data_source.dart';
@@ -46,7 +47,9 @@ Future<void> init() async {
   );
 
   //! Core
-  // ...
+  // sl.registerLazySingleton<NetworkInfo>(
+  //  () => NetworkInfoImpl(sl()),
+  // );
 
   //! External
   sl.registerLazySingleton(() => http.Client());
