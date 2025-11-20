@@ -1,19 +1,43 @@
 import '../../domain/entities/user.dart';
 
-// Este Modelo "extiende" la Entidad de Dominio
+// UserModel - Modelo para respuestas de autenticación
+class UserModel extends User {
+  const UserModel({
+    required super.id,
+    required super.email,
+    required super.name,
+  });
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'].toString(),
+      email: json['email'],
+      name: json['name'] ?? json['firstName'] ?? '', // Flexible con el nombre del campo
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+    };
+  }
+}
+
+// ProfileModel - Modelo para operaciones de perfil
 class ProfileModel extends User {
   const ProfileModel({
-    required String id,
-    required String email,
-    required String nombre,
-    // (Puedes añadir más campos del ProfileResource si los necesitas)
-  }) : super(id: id, email: email, nombre: nombre);
+    required super.id,
+    required super.email,
+    required super.name,
+  });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'].toString(),
       email: json['email'],
-      nombre: json['firstName'], // Tu backend usa 'firstName'
+      name: json['firstName'], // Tu backend usa 'firstName'
     );
   }
 
