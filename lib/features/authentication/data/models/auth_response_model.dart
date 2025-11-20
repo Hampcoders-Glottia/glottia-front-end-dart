@@ -1,24 +1,25 @@
-import 'package:equatable/equatable.dart';
+import 'profile_model.dart';
 
-class AuthResponseModel extends Equatable {
-  final int id;
-  final String username;
+class AuthResponseModel {
   final String token;
+  final UserModel user;
 
   const AuthResponseModel({
-    required this.id,
-    required this.username,
     required this.token,
+    required this.user,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
     return AuthResponseModel(
-      id: json['id'],
-      username: json['username'],
-      token: json['token'],
+      token: json['token'] as String,
+      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
     );
   }
 
-  @override
-  List<Object?> get props => [id, username, token];
+  Map<String, dynamic> toJson() {
+    return {
+      'token': token,
+      'user': user.toJson(),
+    };
+  }
 }

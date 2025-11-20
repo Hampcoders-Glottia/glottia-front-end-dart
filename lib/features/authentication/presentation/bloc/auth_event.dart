@@ -47,3 +47,22 @@ class LanguageSelected extends AuthEvent {
 }
 
 class LogoutRequested extends AuthEvent {}
+
+class RegisterButtonPressed extends AuthEvent {
+  final String email;
+  final String password;
+  final String name;
+  final String lastName;
+  final String userType; // Nuevo campo
+
+  const RegisterButtonPressed({
+    required this.email,
+    required this.password,
+    required this.name,
+    required this.lastName,
+    required this.userType,
+  });
+
+  @override
+  List<Object?> get props => [email, password, name, lastName, userType];
+}
