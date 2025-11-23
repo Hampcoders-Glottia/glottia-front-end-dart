@@ -38,19 +38,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _onSubmit() {
-    if (_formKey.currentState!.validate()) {
-      // Disparamos el evento con TODOS los datos, incluido el tipo de usuario
-      context.read<AuthBloc>().add(
-            RegisterButtonPressed(
-              email: _emailController.text.trim(),
-              password: _passwordController.text.trim(),
-              name: _nameController.text.trim(),
-              lastName: _lastNameController.text.trim(),
-              userType: _selectedUserType, // <--- Dato clave
+      if (_formKey.currentState!.validate()) {
+        // Disparamos el evento con TODOS los datos, incluido el tipo de usuario
+        context.read<AuthBloc>().add(
+            RegisterRequested(
+              nombre: _nameController.text,
+              apellido: _lastNameController.text,
+              email: _emailController.text,
+              password: _passwordController.text,
+              userType: _selectedUserType, // Enviamos el tipo de usuario seleccionado
             ),
           );
-    }
-  }
+             }
+              }
 
   @override
   Widget build(BuildContext context) {

@@ -46,6 +46,7 @@ class ProfileModel extends User {
     required String firstName,
     required String lastName,
     required String email,
+    required String businessRole,
     // (Tu backend espera 'age' y 'businessRole', los omitiremos por ahora)
   }) {
     return {
@@ -53,7 +54,7 @@ class ProfileModel extends User {
       'lastName': lastName,
       'email': email,
       'age': 18, // TODO: Añadir esto a la UI de registro
-      'businessRole': 'LEARNER', // TODO: Asumir 'LEARNER' por defecto
+      'businessRole': businessRole, // TODO: Asumir 'LEARNER' por defecto
     };
   }
 }

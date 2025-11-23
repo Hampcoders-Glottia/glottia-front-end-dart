@@ -21,49 +21,52 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> login(String email, String password) async {
     // (Aquí chequearías la conexión a internet)
     try {
-      // 1. Llama a la API de Auth para obtener el token
-      final authResponse = await authRemoteDataSource.login(email, password);
+      print('AuthRepositoryImpl: Iniciando login para $email');
 
-      // 2. Llama a la API de Profiles para obtener los datos del usuario
-      final profileModel = await profileRemoteDataSource.getProfileByEmail(
-        email,
-        authResponse.token,
-      );
-      
-      // 3. Devuelve la entidad User (que es ProfileModel)
+      final authResponse = await authRemoteDataSource.login(email, password);
+      print("AuthRepositoryImpl: Login exitoso, obteniendo perfil ${authResponse.token.substring(0, 10)}...");
+
+      final profileModel = await profileRemoteDataSource.getProfileByEmail(email, authResponse.token);
+      print("AuthRepositoryImpl: Perfil obtenido exitosamente: ${profileModel.name}");
+
       return Right(profileModel);
-      
-    } catch (e) {
+
+    } catch (e, stackTrace) {
+      print("Error en: $e");
       // (Aquí deberías manejar ServerException, CacheException, etc.)
+      print(stackTrace);
       return Left(ServerFailure()); 
     }
   }
 
   @override
   Future<Either<Failure, User>> register(
-      String nombre, String apellido, String email, String password) async {
+      String nombre, String apellido, String email, String password, String userType) async {
     try {
-      // 1. Llama a la API de Auth para crear el usuario (IAM)
-      // (Tu backend ignora nombre y apellido aquí, solo usa email y pass)
+      // 1. Crear usuario en IAM (Auth)
       await authRemoteDataSource.register(email, password);
 
-      // 2. Prepara los datos del perfil
+      // 2. Mapear el tipo de usuario del Front ('learner'/'owner') al del Back ('LEARNER'/'PARTNER')
+      final businessRole = userType == 'owner' ? 'PARTNER' : 'LEARNER';
+
+      // 3. Preparar datos para Profile
       final profileData = ProfileModel.registerToJson(
         firstName: nombre,
         lastName: apellido,
         email: email,
+        businessRole: businessRole, // Enviamos el rol dinámico
       );
 
-      // 3. Llama a la API de Profiles para crear el perfil
+      // 4. Crear perfil
       final profileModel = await profileRemoteDataSource.createProfile(profileData);
       
-      // 4. Devuelve la entidad User (que es ProfileModel)
       return Right(profileModel);
 
     } catch (e) {
       return Left(ServerFailure());
     }
   }
+// ...
 
   @override
   Future<Either<Failure, void>> logout() async {
