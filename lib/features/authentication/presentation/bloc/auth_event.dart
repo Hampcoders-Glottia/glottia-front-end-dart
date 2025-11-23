@@ -11,10 +11,7 @@ class LoginRequested extends AuthEvent {
   final String email;
   final String password;
 
-  const LoginRequested({
-    required this.email,
-    required this.password,
-  });
+  const LoginRequested({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -25,7 +22,7 @@ class RegisterRequested extends AuthEvent {
   final String apellido;
   final String email;
   final String password;
-  final String userType; // Nuevo campo ('learner' o 'owner')
+  final String userType; 
 
   const RegisterRequested({
     required this.nombre,
