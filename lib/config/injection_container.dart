@@ -44,6 +44,7 @@ Future<void> init() async {
     () => AuthRepositoryImpl(
       authRemoteDataSource: sl(),
       profileRemoteDataSource: sl(),
+      tokenStorage: sl(),
     ),
   );
 
@@ -54,8 +55,10 @@ Future<void> init() async {
 
   // Register Token Storage
   sl.registerLazySingleton(() => TokenStorage());
+  
   // Register Interceptor with Token Storage
   sl.registerLazySingleton(() => AuthInterceptor(tokenStorage: sl()));
+  
   // Register Dio with Interceptor
   sl.registerLazySingleton(() {
     final dio = Dio(BaseOptions(
@@ -72,13 +75,16 @@ Future<void> init() async {
     return dio;
   });
 
+  // --- CORRECCIÓN AQUÍ ---
+  // ProfileRemoteDataSourceImpl ahora pide 'dio', no 'client'
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(client: sl()),
+    () => ProfileRemoteDataSourceImpl(dio: sl()), 
   );
+  // -----------------------
 
   //! Features - Dashboard
 
-  // BLoC Dashboard - Ahora inyectamos los casos de uso reales
+  // BLoC Dashboard
   sl.registerFactory(
     () => DashboardBloc(
       getLearnerStats: sl(),
@@ -96,6 +102,8 @@ Future<void> init() async {
   );
 
   // Data Sources Dashboard
+  // NOTA: Si Dashboard sigue usando http, esto está bien. 
+  // Si también migraste Dashboard a Dio, cambia 'client' por 'dio' aquí también.
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(client: sl()),
   );

@@ -1,4 +1,6 @@
-class AuthResponseModel {
+import 'package:equatable/equatable.dart';
+
+class AuthResponseModel extends Equatable {
   final int id;
   final String username;
   final String token;
@@ -24,4 +26,7 @@ class AuthResponseModel {
       'token': token,
     };
   }
+
+  @override
+  List<Object?> get props => [id, username, token];
 }

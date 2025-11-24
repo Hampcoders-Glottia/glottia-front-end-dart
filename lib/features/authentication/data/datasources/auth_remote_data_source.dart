@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:mobile_frontend/const/backend_urls.dart';
 import 'package:mobile_frontend/core/network/token_storage.dart';
 import '../../../../core/error/exceptions.dart'; 
 import '../models/auth_response_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<AuthResponseModel> login(String email, String password);
-  Future<void> register(String email, String password);
+  Future<AuthResponseModel> login(String username, String password);
+  Future<void> register(String username, String password);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -16,7 +17,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<AuthResponseModel> login(String username, String password) async {
-    const endpoint = 'api/v1/authentication/sign-in';
+    const endpoint = '$baseUrl/authentication/sign-in';
     try {
       final response = await dio.post(
         endpoint,
@@ -43,12 +44,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> register(String email, String password) async {
+  Future<void> register(String username, String password) async {
     try {
       await dio.post(
-        '/authentication/sign-up',
+        '$baseUrl/authentication/sign-up',
         data: {
-          'username': email,
+          'username': username,
           'password': password,
         },
       );
