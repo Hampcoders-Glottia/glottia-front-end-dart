@@ -1,5 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_frontend/const/backend_urls.dart';
+import 'package:mobile_frontend/core/network/auth_interceptor.dart';
+import 'package:mobile_frontend/core/network/token_storage.dart';
 
 // Authentication imports
 import '../features/authentication/domain/repositories/auth_repository.dart';
@@ -45,8 +49,29 @@ Future<void> init() async {
 
   // Data Sources Auth
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(client: sl()),
+    () => AuthRemoteDataSourceImpl(dio: sl(), tokenStorage: sl()),
   );
+
+  // Register Token Storage
+  sl.registerLazySingleton(() => TokenStorage());
+  // Register Interceptor with Token Storage
+  sl.registerLazySingleton(() => AuthInterceptor(tokenStorage: sl()));
+  // Register Dio with Interceptor
+  sl.registerLazySingleton(() {
+    final dio = Dio(BaseOptions(
+      baseUrl: baseUrl,
+      contentType: Headers.jsonContentType,
+    ));
+  
+    dio.interceptors.add(sl<AuthInterceptor>());
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+    ));
+
+    return dio;
+  });
+
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(client: sl()),
   );
