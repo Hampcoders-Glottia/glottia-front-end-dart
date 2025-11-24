@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/data/models/language.dart';
 import 'package:mobile_frontend/features/authentication/presentation/widgets/languague_option_card.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/pages/dashboard_screen.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -38,7 +38,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
     // 2. Navegamos al Dashboard principal y borramos el historial para que no pueda volver atrás
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      MaterialPageRoute(builder: (_) => const LearnerDashboardScreen()),
       (route) => false,
     );
   }

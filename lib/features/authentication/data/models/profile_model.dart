@@ -4,14 +4,14 @@ import '../../domain/entities/user.dart';
 class UserModel extends User {
   const UserModel({
     required super.id,
-    required super.email,
+    required super.username,
     required super.name,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'].toString(),
-      email: json['email'],
+      username: json['username'],
       name: json['name'] ?? json['firstName'] ?? '', // Flexible con el nombre del campo
     );
   }
@@ -19,7 +19,7 @@ class UserModel extends User {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'email': email,
+      'username': username,
       'name': name,
     };
   }
@@ -29,14 +29,14 @@ class UserModel extends User {
 class ProfileModel extends User {
   const ProfileModel({
     required super.id,
-    required super.email,
+    required super.username,
     required super.name,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'].toString(),
-      email: json['email'],
+      username: json['email'],
       name: json['firstName'], // Tu backend usa 'firstName'
     );
   }
@@ -45,15 +45,16 @@ class ProfileModel extends User {
   static Map<String, dynamic> registerToJson({
     required String firstName,
     required String lastName,
-    required String email,
+    required String username,
+    required String businessRole,
     // (Tu backend espera 'age' y 'businessRole', los omitiremos por ahora)
   }) {
     return {
       'firstName': firstName,
       'lastName': lastName,
-      'email': email,
+      'email': username,
       'age': 18, // TODO: Añadir esto a la UI de registro
-      'businessRole': 'LEARNER', // TODO: Asumir 'LEARNER' por defecto
+      'businessRole': businessRole, // TODO: Asumir 'LEARNER' por defecto
     };
   }
 }
