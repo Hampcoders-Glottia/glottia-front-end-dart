@@ -21,14 +21,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> login(String email, String password) async {
     // (Aquí chequearías la conexión a internet)
     try {
-      print('AuthRepositoryImpl: Iniciando login para $email');
-
       final authResponse = await authRemoteDataSource.login(email, password);
-      print("AuthRepositoryImpl: Login exitoso, obteniendo perfil ${authResponse.token.substring(0, 10)}...");
 
-      final profileModel = await profileRemoteDataSource.getProfileByEmail(email, authResponse.token);
-      print("AuthRepositoryImpl: Perfil obtenido exitosamente: ${profileModel.name}");
-
+      final profileModel = await profileRemoteDataSource.getProfileByEmail(
+        authResponse.username, 
+        authResponse.token
+        );
+    
       return Right(profileModel);
 
     } catch (e, stackTrace) {
@@ -63,6 +62,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(profileModel);
 
     } catch (e) {
+      //TODO: Si falla aqui, tienes un usuario creado sin perfil.
+      // Deberías manejar la limpieza o el rollback.
       return Left(ServerFailure());
     }
   }

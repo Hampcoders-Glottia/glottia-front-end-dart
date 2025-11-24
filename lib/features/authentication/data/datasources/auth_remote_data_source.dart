@@ -15,12 +15,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.dio, required this.tokenStorage});
 
   @override
-  Future<AuthResponseModel> login(String email, String password) async {
+  Future<AuthResponseModel> login(String username, String password) async {
+    const endpoint = 'api/v1/authentication/sign-in';
     try {
       final response = await dio.post(
-        '/authentication/sign-in',
+        endpoint,
         data: {
-          'username': email,
+          'username': username,
           'password': password,
         },
       );
