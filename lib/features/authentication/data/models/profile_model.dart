@@ -48,13 +48,44 @@ class ProfileModel extends User {
     required String username,
     required String businessRole,
     // (Tu backend espera 'age' y 'businessRole', los omitiremos por ahora)
+    String? street,
+    String? number,
+    String? city,
+    String? postalCode,
+    String? country,
   }) {
-    return {
+    final Map<String, dynamic> data = {
       'firstName': firstName,
       'lastName': lastName,
       'email': username,
-      'age': 18, // TODO: Añadir esto a la UI de registro
-      'businessRole': businessRole, // TODO: Asumir 'LEARNER' por defecto
+      'age': 25, // Edad hardcodeada válida (Backend requiere int)
+      'businessRole': businessRole,
     };
+
+    // ¡OJO AQUÍ! Esta es la parte que fallaba.
+    // El backend lanza excepción si street es null.
+    // Enviamos la data SI el rol es LEARNER.
+    if (businessRole == 'LEARNER') {
+      data['street'] = street ?? 'Sin Calle';
+      data['number'] = number ?? '0';
+      data['city'] = city ?? 'Sin Ciudad';
+      data['postalCode'] = postalCode ?? '00000';
+      data['country'] = country ?? 'Sin Pais';
+      data['latitude'] = 0.0;
+      data['longitude'] = 0.0;
+    }
+    
+    // Si es PARTNER, añadimos datos dummy de negocio para que no falle
+    if (businessRole == 'PARTNER') {
+       data['legalName'] = '$firstName $lastName Enterprise';
+       data['businessName'] = '$firstName\'s Place';
+       data['taxId'] = '${DateTime.now().millisecondsSinceEpoch}'; // Tax ID único temporal
+       data['contactEmail'] = username;
+       data['contactPhone'] = '999999999';
+       data['contactPersonName'] = '$firstName $lastName';
+       data['description'] = 'Nuevo local registrado desde la app';
+    }
+
+    return data;
   }
 }

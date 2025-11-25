@@ -32,6 +32,11 @@ class RegisterParams extends Equatable {
   final String email;
   final String password;
   final String userType; // Nuevo campo para el tipo de usuario
+  final String? street;
+  final String? number;
+  final String? city;
+  final String? postalCode;
+  final String? country;
 
   const RegisterParams({
     required this.nombre,
@@ -39,8 +44,13 @@ class RegisterParams extends Equatable {
     required this.email,
     required this.password,
     required this.userType,
+    this.street,
+    this.number,
+    this.city,
+    this.postalCode,
+    this.country,
   });
 
   @override
-  List<Object?> get props => [nombre, apellido, email, password, userType];
+  List<Object?> get props => [nombre, apellido, email, password, userType, street, number, city, postalCode, country];
 }
