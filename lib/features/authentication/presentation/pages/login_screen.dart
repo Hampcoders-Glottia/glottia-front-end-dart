@@ -5,7 +5,7 @@ import 'package:mobile_frontend/config/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../widgets/auth_field.dart'; // Usamos el widget genérico que creamos antes
+import '../widgets/auth_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,10 +15,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controladores para capturar el texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>(); // Para validar el formulario
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -28,11 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onSubmit() {
+    // Ocultar el teclado al enviar
+    FocusScope.of(context).unfocus();
+
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Disparamos el evento al BLoC
       context.read<AuthBloc>().add(
             LoginRequested(email: email, password: password),
           );
@@ -41,7 +42,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ajustes de diseño según tu Figma
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -50,10 +50,10 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: const Text(
-          'Back', 
+          'Back',
           style: TextStyle(color: kPrimaryBlue, fontSize: 16),
         ),
-        titleSpacing: -10, // Acerca el texto "Back" a la flecha
+        titleSpacing: -10,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -70,20 +70,8 @@ class _LoginScreenState extends State<LoginScreen> {
             }
 
             if (state is AuthSuccess) {
-              // 🚀 LÓGICA DE REDIRECCIÓN AUTOMÁTICA
-              // El estado AuthSuccess ya tiene el 'user'.
-              // Verificamos el tipo y navegamos.
-              
-              /* TODO: Descomenta esto cuando tu User tenga el campo 'type'
-               if (state.user.type == 'owner') {
-                 Navigator.of(context).pushReplacementNamed('/owner_home');
-               } else {
-                 Navigator.of(context).pushReplacementNamed('/learner_home');
-               }
-              */
-              
-              // Por ahora, vamos al home genérico
-              Navigator.of(context).pushReplacementNamed('/home');
+              // Redirigimos a la selección de idioma en lugar del Dashboard directo
+              Navigator.of(context).pushReplacementNamed('/language_selection');
             }
           },
           builder: (context, state) {
@@ -102,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'Iniciar Sesión',
                       style: TextStyle(
-                        color: kPrimaryBlue, // #4A6FA5 según tu diseño
+                        color: kPrimaryBlue,
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
                       ),
@@ -122,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // --- CAMPOS (Usando AuthField reutilizable) ---
+                    // Campos
                     AuthField(
                       controller: _emailController,
                       hintText: 'Correo',
@@ -139,19 +127,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       hintText: 'Contraseña',
                       prefixIcon: Icons.lock_outline,
-                      isPassword: true, // Activa el ojito
+                      isPassword: true,
                       validator: (value) {
                         if (value == null || value.length < 6) return 'Mínimo 6 caracteres';
                         return null;
                       },
                     ),
 
-                    // --- Olvidaste contraseña ---
+                    // Olvidaste contraseña
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // TODO: Navegar a recuperación
+                          // TODO: Implementar recuperación
                         },
                         child: RichText(
                           text: const TextSpan(
@@ -173,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 30),
 
-                    // --- Botón Login ---
+                    // Botón Login
                     ElevatedButton(
                       onPressed: isLoading ? null : _onSubmit,
                       style: ElevatedButton.styleFrom(
@@ -205,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 40),
 
-                    // --- Footer Registro ---
+                    // Footer Registro
                     Center(
                       child: RichText(
                         text: TextSpan(
