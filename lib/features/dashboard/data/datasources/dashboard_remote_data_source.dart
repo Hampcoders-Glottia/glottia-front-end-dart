@@ -1,69 +1,69 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:mobile_frontend/core/error/failures.dart';
-import '../../../../const/backend_urls.dart';
+import 'package:dio/dio.dart';
+import 'package:mobile_frontend/const/backend_urls.dart';
 import '../models/loyalty_stats_model.dart';
 import '../models/encounter_model.dart';
 
 abstract class DashboardRemoteDataSource {
-  Future<LoyaltyStatsModel> getLoyaltyStats(String token);
-  Future<List<EncounterModel>> getUpcomingEncounters(String token);
+  Future<LoyaltyStatsModel> getLoyaltyStats();
+  Future<List<EncounterModel>> getUpcomingEncounters();
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
-  final http.Client client;
+  final Dio dio; 
 
-  DashboardRemoteDataSourceImpl({required this.client});
+  DashboardRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<LoyaltyStatsModel> getLoyaltyStats(String token) async {
-    // Endpoint definido en LoyaltyController.java
-    final response = await client.get(
-      Uri.parse('$baseUrl/loyalty/me'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+  Future<LoyaltyStatsModel> getLoyaltyStats() async {
+    const endpoint = '$baseUrl/loyalty/me';
 
-    if (response.statusCode == 200) {
-      return LoyaltyStatsModel.fromJson(json.decode(response.body));
-    } else {
-      throw ServerFailure();
+    try {
+      // Dio ya incluye el token gracias al AuthInterceptor configurado
+      final response = await dio.get(endpoint);
+
+      if (response.statusCode == 200) {
+        return LoyaltyStatsModel.fromJson(response.data);
+      } else {
+        // Si el status no es 200 (ej. 404 porque no tiene cuenta de lealtad aún),
+        // devolvemos valores en cero para no bloquear la UI.
+        return const LoyaltyStatsModel(points: 0, encountersAttended: 0);
+      }
+    } catch (e) {
+      // Si ocurre un error de conexión o del servidor, devolvemos stats vacíos
+      print("⚠️ Error obteniendo stats (usando default): $e");
+      return const LoyaltyStatsModel(points: 0, encountersAttended: 0);
     }
   }
 
   @override
-  Future<List<EncounterModel>> getUpcomingEncounters(String token) async {
-    // Usamos el endpoint de búsqueda de EncountersController.java
-    // Filtramos por fecha actual para ver los futuros
-    final now = DateTime.now().toIso8601String().split('T')[0]; // yyyy-MM-dd
+  Future<List<EncounterModel>> getUpcomingEncounters() async {
+    const endpoint = '$baseUrl/encounters/search';
     
-    // NOTA: Los parámetros languageId y cefrLevelId son obligatorios en tu backend actual.
-    // Para esta primera versión, hardcodearemos valores (ej. 1 para inglés) o 
-    // tendrás que hacer opcionales esos filtros en el backend.
-    final queryParams = {
-      'date': now,
-      'location': 'Lima', // Placeholder requerido
-      'languageId': '1',  // Placeholder
-      'cefrLevelId': '1', // Placeholder
-    };
+    // Fecha actual para filtrar encuentros futuros
+    final now = DateTime.now().toIso8601String().split('T')[0]; 
 
-    final uri = Uri.parse('$baseUrl/encounters/search').replace(queryParameters: queryParams);
+    try {
+      final response = await dio.get(
+        endpoint,
+        queryParameters: {
+          'date': now,
+          'location': 'Lima', // Valor por defecto requerido por el backend
+          'languageId': 1,    // 1 = Inglés (Default)
+          'cefrLevelId': 1,   // 1 = A1 (Default)
+          'page': 0,
+          'size': 10,
+        },
+      );
 
-    final response = await client.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = json.decode(response.body);
-      return jsonList.map((json) => EncounterModel.fromJson(json)).toList();
-    } else {
-      throw ServerFailure();
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = response.data;
+        return jsonList.map((json) => EncounterModel.fromJson(json)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print("⚠️ Error obteniendo encuentros (usando lista vacía): $e");
+      return [];
     }
   }
 }
