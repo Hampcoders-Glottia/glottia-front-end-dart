@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_frontend/config/theme/app_colors.dart';
-import '../bloc/dashboard_bloc.dart';
-import '../bloc/dashboard_event.dart';
-import '../bloc/dashboard_state.dart';
 import 'package:intl/intl.dart';
-import '../../domain/entities/encounter.dart'; // Importamos la entidad correcta
+import 'package:mobile_frontend/config/theme/app_colors.dart';
+import '../../domain/entities/encounter.dart';
+import '../../domain/entities/loyalty_stats.dart';
+import '../bloc/dashboard/dashboard_bloc.dart';
+import '../bloc/dashboard/dashboard_event.dart';
+import '../bloc/dashboard/dashboard_state.dart';
 
 class LearnerDashboardScreen extends StatefulWidget {
   const LearnerDashboardScreen({super.key});
@@ -18,165 +19,159 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargamos los datos al iniciar la pantalla
     context.read<DashboardBloc>().add(LoadDashboardData());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
-      body: SafeArea(
-        child: BlocBuilder<DashboardBloc, DashboardState>(
-          builder: (context, state) {
-            if (state is DashboardLoading) {
-              return const Center(child: CircularProgressIndicator(color: kPrimaryBlue));
-            } else if (state is DashboardError) {
-              return Center(child: Text(state.message));
-            } else if (state is DashboardLoaded) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+      backgroundColor: const Color(0xFFF8F9FA), // Fondo gris muy suave
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            const CircleAvatar(
+              backgroundColor: kPrimaryBlue,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "Bienvenido de nuevo",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                Text(
+                  "Estudiante", // Aquí podrías poner el nombre real si lo tienes en el estado
+                  style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none, color: Colors.black87),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: BlocBuilder<DashboardBloc, DashboardState>(
+        builder: (context, state) {
+          if (state is DashboardLoading) {
+            return const Center(child: CircularProgressIndicator(color: kPrimaryBlue));
+          } else if (state is DashboardError) {
+            return _buildErrorState(state.message);
+          } else if (state is DashboardLoaded) {
+            return RefreshIndicator(
+              onRefresh: () async => context.read<DashboardBloc>().add(LoadDashboardData()),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. HEADER
-                    _buildHeader(),
+                    // 1. Tarjeta de Puntos (Gamificación)
+                    _LoyaltyCard(stats: state.stats),
                     
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 25),
 
-                    // 2. TARJETAS DE PROGRESO (Actualizadas con LoyaltyStats)
+                    // 2. Título de Sección
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: _ProgressCard(
-                            label: 'Puntos Totales', // Cambio de etiqueta
-                            value: state.stats.points.toString(), // Nueva propiedad
-                            icon: Icons.stars, // Icono más relevante para puntos
-                            color: const Color(0xFFE3F2FD),
-                            iconColor: kPrimaryBlue,
-                          ),
+                        const Text(
+                          "Tus Próximas Clases",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _ProgressCard(
-                            label: 'Clases Asistidas', // Cambio de etiqueta
-                            value: state.stats.encountersAttended.toString(), // Nueva propiedad
-                            icon: Icons.people_alt,
-                            color: const Color(0xFFFFF3E0),
-                            iconColor: Colors.orange,
-                          ),
-                        ),
+                        TextButton(
+                          onPressed: () {}, // Navegar a historial completo
+                          child: const Text("Ver todas"),
+                        )
                       ],
                     ),
+                    
+                    const SizedBox(height: 10),
 
-                    const SizedBox(height: 30),
-
-                    // 3. BOTÓN DE EXPLORAR
-                    ElevatedButton(
-                      onPressed: () {
-                        // TODO: Navegar a pantalla de búsqueda
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimaryBlue,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 4,
-                        shadowColor: kPrimaryBlue.withOpacity(0.4),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.explore, color: Colors.white),
-                          SizedBox(width: 10),
-                          Text(
-                            "Explorar Encuentros",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 35),
-
-                    // 4. LISTA DE PRÓXIMAS RESERVAS
-                    const Text(
-                      "Próximos Encuentros",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
+                    // 3. Lista de Encuentros
                     if (state.reservations.isEmpty)
                       _buildEmptyState()
                     else
-                      ...state.reservations.map((encounter) => _ReservationCard(encounter: encounter)),
+                      ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: state.reservations.length,
+                        separatorBuilder: (c, i) => const SizedBox(height: 15),
+                        itemBuilder: (context, index) {
+                          return _EncounterCard(encounter: state.reservations[index]);
+                        },
+                      ),
                   ],
                 ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+      // Botón Flotante para Acción Principal
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+           final result = await Navigator.of(context).pushNamed('/create_encounter');
+           // Si se creó, recargamos el dashboard
+           if (result == true) {
+            context.read<DashboardBloc>().add(LoadDashboardData());
+           }
+        },
+        backgroundColor: kPrimaryBlue,
+        icon: const Icon(Icons.add_location_alt_outlined, color: Colors.white),
+        label: const Text("Reservar Mesa", style: TextStyle(color: Colors.white)),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        const CircleAvatar(
-          radius: 28,
-          backgroundColor: Colors.grey,
-          // Puedes cambiar esto por una imagen real o un asset local
-          backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), 
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              "Hola, Estudiante", // Podrías sacar el nombre del AuthBloc si lo necesitas
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Nivel: B1 (Intermedio)", // Hardcoded por ahora o traer del perfil
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.notifications_none, size: 28),
-        ),
-      ],
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+          const SizedBox(height: 10),
+          Text(message, textAlign: TextAlign.center),
+          TextButton(
+            onPressed: () => context.read<DashboardBloc>().add(LoadDashboardData()),
+            child: const Text("Reintentar"),
+          )
+        ],
+      ),
     );
   }
 
   Widget _buildEmptyState() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[200]!),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         children: const [
-          Icon(Icons.event_busy, size: 40, color: Colors.grey),
-          SizedBox(height: 10),
+          Icon(Icons.calendar_today_outlined, size: 40, color: Colors.grey),
+          SizedBox(height: 15),
           Text(
-            "No hay encuentros programados",
-            style: TextStyle(color: Colors.grey),
+            "No tienes clases programadas",
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            "¡Reserva una mesa para practicar!",
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
         ],
       ),
@@ -184,58 +179,73 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
   }
 }
 
-// Widget Interno: Tarjeta de Progreso (Sin cambios mayores, solo uso de datos)
-class _ProgressCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final Color iconColor;
+// --- WIDGETS INTERNOS ---
 
-  const _ProgressCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.iconColor,
-  });
+class _LoyaltyCard extends StatelessWidget {
+  final LoyaltyStats stats;
+
+  const _LoyaltyCard({required this.stats});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4A6FA5), Color(0xFF6B8DD6)], // Tonos de tu kPrimaryBlue
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: kPrimaryBlue.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Tus Puntos Glottia",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                "${stats.points}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "Nivel: Principiante", // Placeholder, backend podría enviarlo
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              )
+            ],
+          ),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24, // Un poco más grande para resaltar los números
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.black.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
-            ),
+            child: const Icon(Icons.emoji_events, color: Colors.white, size: 40),
           ),
         ],
       ),
@@ -243,41 +253,58 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-// Widget Interno: Tarjeta de Reserva (Adaptado a la entidad Encounter)
-class _ReservationCard extends StatelessWidget {
-  final Encounter encounter; // Usamos la entidad Encounter
+class _EncounterCard extends StatelessWidget {
+  final Encounter encounter;
 
-  const _ReservationCard({required this.encounter});
+  const _EncounterCard({required this.encounter});
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('EEE, d MMM • h:mm a', 'es_ES'); // Requiere inicializar locale si usas 'es_ES'
+    // Formateadores de fecha
+    final dateStr = DateFormat('d MMM', 'es_ES').format(encounter.scheduledAt);
+    final timeStr = DateFormat('h:mm a').format(encounter.scheduledAt);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
         children: [
-          // Imagen del local (Placeholder por ahora ya que Encounter no trae imagen)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 80,
-              height: 80,
-              color: Colors.grey[200],
-              child: Icon(Icons.store, color: Colors.grey[400], size: 40),
+          // Columna de Fecha
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: kPrimaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  dateStr.split(' ')[0], // Día
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 20, 
+                    color: kPrimaryBlue
+                  ),
+                ),
+                Text(
+                  dateStr.split(' ')[1].toUpperCase(), // Mes
+                  style: const TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w600, 
+                    color: kPrimaryBlue
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 16),
@@ -287,43 +314,32 @@ class _ReservationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nombre del Local
                 Text(
-                  encounter.venueName, 
+                  encounter.topic,
                   style: const TextStyle(
-                    fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                
                 const SizedBox(height: 4),
-                
-                // Fecha y Hora
-                Text(
-                  dateFormat.format(encounter.scheduledAt),
-                  style: const TextStyle(
-                    color: kPrimaryBlue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                
-                const SizedBox(height: 6),
-                
-                // Topic y Lenguaje
                 Row(
                   children: [
-                    const Icon(Icons.topic_outlined, size: 14, color: Colors.grey),
+                    const Icon(Icons.translate, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        "${encounter.topic} (${encounter.language})",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
+                    Text(
+                      "${encounter.language} • ${encounter.venueName}",
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      timeStr,
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
                     ),
                   ],
                 ),
@@ -331,22 +347,8 @@ class _ReservationCard extends StatelessWidget {
             ),
           ),
           
-          // Chip de estado pequeño
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              encounter.status, // Ej: "READY"
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ),
+          // Icono de Estado o Flecha
+          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
         ],
       ),
     );

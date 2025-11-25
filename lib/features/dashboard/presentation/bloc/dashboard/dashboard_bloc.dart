@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/usecases/usecase.dart';
-import '../../domain/usecases/get_learner_stats.dart';
-import '../../domain/usecases/get_upcoming_encounters.dart';
+import '../../../../../core/usecases/usecase.dart';
+import '../../../domain/usecases/get_learner_stats.dart';
+import '../../../domain/usecases/get_upcoming_encounters.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 

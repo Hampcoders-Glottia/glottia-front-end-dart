@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/loyalty_stats.dart'; // Nueva entidad
-import '../../domain/entities/encounter.dart';     // Nueva entidad
+import '../../../domain/entities/loyalty_stats.dart'; // Nueva entidad
+import '../../../domain/entities/encounter.dart';     // Nueva entidad
 
 abstract class DashboardState extends Equatable {
   const DashboardState();

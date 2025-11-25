@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:mobile_frontend/features/authentication/presentation/pages/language_selection_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/login_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/register_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/welcome_screen.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
 import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
 import 'package:mobile_frontend/config/injection_container.dart' as di;
 
@@ -39,12 +41,15 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
           
-          // 2. CAMBIO CLAVE AQUÍ:
+          '/language_selection': (context) => const LanguageSelectionScreen(),
+          
           // Inyectamos el DashboardBloc SOLO para esta ruta y mostramos la nueva pantalla
           '/home': (context) => BlocProvider(
             create: (_) => di.sl<DashboardBloc>(), // Crea el BLoC usando GetIt
             child: const LearnerDashboardScreen(), // Muestra la vista del Aprendiz
           ),
+
+          '/create_encounter': (context) => const CreateEncounterScreen(),
         },
       ),
     );
