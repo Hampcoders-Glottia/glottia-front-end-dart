@@ -16,7 +16,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, LoyaltyStats>> getLearnerStats() async {
     try {
       // En producción: final token = await localDataSource.getToken();
-      final result = await remoteDataSource.getLoyaltyStats(_tempToken);
+      final result = await remoteDataSource.getLoyaltyStats();
       return Right(result);
     } on ServerFailure {
       return Left(ServerFailure());
@@ -28,7 +28,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   @override
   Future<Either<Failure, List<Encounter>>> getUpcomingEncounters() async {
     try {
-      final result = await remoteDataSource.getUpcomingEncounters(_tempToken);
+      final result = await remoteDataSource.getUpcomingEncounters();
       return Right(result);
     } on ServerFailure {
       return Left(ServerFailure());
