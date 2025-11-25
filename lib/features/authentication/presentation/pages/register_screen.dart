@@ -7,7 +7,6 @@ import 'package:mobile_frontend/features/authentication/presentation/pages/regis
 import 'package:mobile_frontend/features/authentication/presentation/widgets/password_field.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-
 import '../widgets/auth_field.dart'; 
 
 class RegisterScreen extends StatefulWidget {
@@ -18,39 +17,62 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controladores
+  // --- Controladores de Texto ---
+  // Datos Básicos
   final _nameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
-  // Estado local para el tipo de usuario (Por defecto 'learner')
-  String _selectedUserType = 'learner'; 
+  // Datos de Dirección (Nuevos)
+  final _streetController = TextEditingController();
+  final _numberController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _zipController = TextEditingController();
+  final _countryController = TextEditingController();
+
+  // Estado del formulario
+  final _formKey = GlobalKey<FormState>();
+  String _selectedUserType = 'learner'; // 'learner' o 'owner'
 
   @override
   void dispose() {
+    // Limpieza de controladores al cerrar la pantalla
     _nameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _streetController.dispose();
+    _numberController.dispose();
+    _cityController.dispose();
+    _zipController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
   void _onSubmit() {
-      if (_formKey.currentState!.validate()) {
-        // Disparamos el evento con TODOS los datos, incluido el tipo de usuario
-        context.read<AuthBloc>().add(
+    // Ocultar teclado antes de procesar
+    FocusScope.of(context).unfocus();
+
+    if (_formKey.currentState!.validate()) {
+      // Disparamos el evento con la lógica condicional
+      context.read<AuthBloc>().add(
             RegisterRequested(
               nombre: _nameController.text,
               apellido: _lastNameController.text,
               email: _emailController.text,
               password: _passwordController.text,
-              userType: _selectedUserType, // Enviamos el tipo de usuario seleccionado
+              userType: _selectedUserType,
+              // Solo enviamos datos de dirección si es un Aprendiz
+              street: _selectedUserType == 'learner' ? _streetController.text : null,
+              number: _selectedUserType == 'learner' ? _numberController.text : null,
+              city: _selectedUserType == 'learner' ? _cityController.text : null,
+              postalCode: _selectedUserType == 'learner' ? _zipController.text : null,
+              country: _selectedUserType == 'learner' ? _countryController.text : null,
             ),
           );
-             }
-              }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +99,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               );
             }
-            // Asumo que tu estado de éxito se llama AuthSuccess o AuthRegistered
-            if (state is AuthSuccess) { 
-               Navigator.of(context).pushReplacement(
+            if (state is AuthRegistered) {
+              // Navegación exitosa
+              Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => RegistrationSuccessScreen(nombre: _nameController.text),
                 ),
@@ -96,8 +118,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Título
                     Text(
-                      'Registrate',
+                      'Regístrate',
                       style: theme.textTheme.headlineLarge?.copyWith(
                         color: kPrimaryBlue,
                         fontWeight: FontWeight.bold,
@@ -107,7 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Regístrate a la aplicación para poder\nutilizar todas sus funcionalidades!',
+                      'Completa tus datos para comenzar',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.black54,
                         fontSize: 14,
@@ -117,7 +140,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 25),
 
                     // --- SELECTOR DE TIPO DE USUARIO ---
-                    // Este bloque crea los dos botones: Aprendiz / Dueño Local
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -133,8 +155,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 25),
-                    // -----------------------------------
 
+                    // --- CAMPOS DE DATOS BÁSICOS ---
                     AuthField(
                       controller: _nameController,
                       hintText: 'Nombre',
@@ -159,15 +181,97 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    PasswordField(controller: _passwordController,
-                    validator: (val) {
-                      if (val == null || val.isEmpty) return 'La contraseña es requerida';
-                      if (val.length < 6) return 'Mínimo 6 caracteres';
-                      return null;
-                    }),
+                    PasswordField(
+                      controller: _passwordController,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return 'Requerido';
+                        if (val.length < 6) return 'Mínimo 6 caracteres';
+                        return null;
+                      },
+                    ),
+
+                    // --- SECCIÓN DIRECCIÓN (Expandible) ---
+                    // Se muestra solo si es Aprendiz
+                    AnimatedCrossFade(
+                      firstChild: Container(), // Espacio vacío si no es learner
+                      secondChild: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 25),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                            child: Text(
+                              "Dirección de Contacto",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: kPrimaryBlue,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          
+                          // Calle (Full Width)
+                          AuthField(
+                            controller: _streetController,
+                            hintText: 'Calle / Avenida',
+                            prefixIcon: Icons.add_road,
+                            validator: (val) => _selectedUserType == 'learner' && (val == null || val.isEmpty) ? 'Requerido' : null,
+                          ),
+                          const SizedBox(height: 15),
+
+                          // Número y Código Postal (Misma fila)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AuthField(
+                                  controller: _numberController,
+                                  hintText: 'Número',
+                                  prefixIcon: Icons.tag,
+                                  validator: (val) => _selectedUserType == 'learner' && (val == null || val.isEmpty) ? 'Req.' : null,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: AuthField(
+                                  controller: _zipController,
+                                  hintText: 'Cod. Postal',
+                                  prefixIcon: Icons.markunread_mailbox_outlined,
+                                  validator: (val) => _selectedUserType == 'learner' && (val == null || val.isEmpty) ? 'Req.' : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+
+                          // Ciudad (Full Width)
+                          AuthField(
+                            controller: _cityController,
+                            hintText: 'Ciudad',
+                            prefixIcon: Icons.location_city,
+                            validator: (val) => _selectedUserType == 'learner' && (val == null || val.isEmpty) ? 'Requerido' : null,
+                          ),
+                          const SizedBox(height: 15),
+
+                          // País (Full Width)
+                          AuthField(
+                            controller: _countryController,
+                            hintText: 'País',
+                            prefixIcon: Icons.public,
+                            validator: (val) => _selectedUserType == 'learner' && (val == null || val.isEmpty) ? 'Requerido' : null,
+                          ),
+                        ],
+                      ),
+                      crossFadeState: _selectedUserType == 'learner' 
+                          ? CrossFadeState.showSecond 
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                    // -------------------------------------
 
                     const SizedBox(height: 30),
 
+                    // Botón de Registro
                     ElevatedButton(
                       onPressed: isLoading ? null : _onSubmit,
                       style: ElevatedButton.styleFrom(
@@ -183,7 +287,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               height: 24,
                               width: 24,
                               child: CircularProgressIndicator(
-                                color: Colors.white, 
+                                color: Colors.white,
                                 strokeWidth: 2,
                               ),
                             )
@@ -198,8 +302,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
 
                     const SizedBox(height: 20),
-                    
-                    // Footer: Ir a Login
+
+                    // Footer
                     Center(
                       child: RichText(
                         text: TextSpan(
@@ -225,7 +329,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-
+                    
                     const SizedBox(height: 20),
                     const Center(
                       child: Text(
@@ -256,12 +360,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Widget auxiliar para construir las opciones del toggle
+  // Widget auxiliar para las opciones de tipo de usuario
   Widget _buildUserTypeOption(String label, String value) {
     final isSelected = _selectedUserType == value;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedUserType = value),
+        onTap: () {
+          // Ocultamos el teclado al cambiar de opción para mejorar la UX
+          FocusScope.of(context).unfocus();
+          setState(() => _selectedUserType = value);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
