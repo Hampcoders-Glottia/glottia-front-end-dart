@@ -29,21 +29,27 @@ final List<Language> availableLanguages = [
     flagColor: null,
   ),
   const Language(
-    code: 'zh',
-    name: 'CHINO',
-    flagEmoji: '🇨🇳',
-    flagColor: null,
-  ),
-  const Language(
     code: 'fr',
     name: 'FRANCES',
     flagEmoji: '🇫🇷',
     flagColor: null,
   ),
-  const Language(
-    code: 'ru',
-    name: 'RUSO',
-    flagEmoji: '🇷🇺',
+    const Language(
+    code: 'de',
+    name: 'ALEMAN',
+    flagEmoji:'🇩🇪',
     flagColor: null,
   ),
+  const Language(
+    code: 'it',
+    name: 'ITALIANO',
+    flagEmoji: '🇮🇹',
+    flagColor: null,
+  ),
+  const Language(
+    code: 'pt', 
+    name: 'PORTUGES', 
+    flagEmoji: '🇵🇹',
+    flagColor: null,
+    )
 ];

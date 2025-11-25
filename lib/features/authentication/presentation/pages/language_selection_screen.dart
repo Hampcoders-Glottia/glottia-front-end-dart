@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/data/models/language.dart';
 import 'package:mobile_frontend/features/authentication/presentation/widgets/languague_option_card.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -25,22 +24,20 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor selecciona un idioma'),
-          behavior: SnackBarBehavior.floating, // Se ve más bonito flotando
+          behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    // 1. Disparamos el evento al BLoC para guardar la preferencia en el backend/estado
-    // (Asegúrate de agregar este evento a tu auth_event.dart si no existe)
-    // context.read<AuthBloc>().add(LanguageSelected(languageCode: selectedLanguageCode!));
+    // TODO: Aquí podrías disparar un evento para guardar el idioma en el backend
+    // context.read<ProfileBloc>().add(UpdateLanguage(selectedLanguageCode!));
 
-    // 2. Navegamos al Dashboard principal y borramos el historial para que no pueda volver atrás
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LearnerDashboardScreen()),
-      (route) => false,
-    );
+    // == CAMBIO CRÍTICO ==
+    // Usamos la ruta '/home' porque en main.dart es donde se inyecta el DashboardBloc.
+    // Si usas MaterialPageRoute directo, el Dashboard fallará.
+    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
   }
 
   @override
@@ -61,7 +58,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 child: TextButton.icon(
                   onPressed: () => Navigator.of(context).maybePop(),
                   icon: const Icon(Icons.arrow_back, color: kPrimaryBlue),
-                  label: const Text('Back', style: TextStyle(color: kPrimaryBlue)),
+                  label: const Text('Atrás', style: TextStyle(color: kPrimaryBlue)),
                   style: TextButton.styleFrom(padding: EdgeInsets.zero),
                 ),
               ),
@@ -74,7 +71,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 style: theme.textTheme.headlineLarge?.copyWith(
                   color: kPrimaryBlue,
                   fontWeight: FontWeight.bold,
-                  fontSize: 32, // Ajustado un poco para evitar overflow
+                  fontSize: 32, 
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -91,7 +88,6 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               // Lista de idiomas
               Expanded(
                 child: ListView.builder(
-                  // Efecto de rebote suave tipo iOS
                   physics: const BouncingScrollPhysics(), 
                   itemCount: availableLanguages.length,
                   itemBuilder: (context, index) {
