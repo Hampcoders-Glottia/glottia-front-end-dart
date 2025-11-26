@@ -34,7 +34,6 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
   TimeOfDay _selectedTime = const TimeOfDay(hour: 18, minute: 00);
   String _selectedLanguage = 'ENGLISH'; // Debe coincidir con tu backend enum
   String _selectedLevel = 'A1';        // Debe coincidir con tu backend enum
-
   // Listas para Dropdowns (Basadas en tu Backend)
   final List<String> _languages = ['ENGLISH', 'SPANISH', 'FRENCH', 'GERMAN', 'ITALIAN', 'PORTUGUESE'];
   final List<String> _levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -55,6 +54,7 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
           language: _selectedLanguage,
           level: _selectedLevel,
           venueId: 1, // Hardcoded por ahora como acordamos
+          creatorId: 1, // Aquí deberías obtener el ID real del usuario logueado
         ),
       );
     }

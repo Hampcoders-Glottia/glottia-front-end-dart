@@ -13,6 +13,7 @@ class CreateEncounterPressed extends EncounterEvent {
   final String language;
   final String level;
   final int venueId; // Por ahora será 1, pero lo recibimos por si acaso
+  final int creatorId; // ID del usuario que crea el encuentro
 
   const CreateEncounterPressed({
     required this.date,
@@ -21,5 +22,6 @@ class CreateEncounterPressed extends EncounterEvent {
     required this.language,
     required this.level,
     required this.venueId,
+    required this.creatorId,
   });
 }
