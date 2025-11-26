@@ -1,10 +1,13 @@
 import '../../domain/entities/user.dart';
 
 class ProfileModel extends User {
+  final String? businessRole; // 1. Nuevo campo para almacenar el rol
+
   const ProfileModel({
     required super.id,
     required super.username,
     required super.name,
+    this.businessRole, // 2. Agregado al constructor
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -12,6 +15,7 @@ class ProfileModel extends User {
       id: json['id'].toString(),
       username: json['email'],
       name: json['firstName'],
+      businessRole: json['businessRole'], // 3. IMPORTANTE: Mapeamos el rol desde el JSON
     );
   }
 
@@ -68,8 +72,8 @@ class ProfileModel extends User {
         // Datos complementarios requeridos por el Backend
         'contactEmail': username, // Usamos el mismo email de registro
         'contactPersonName': '$firstName $lastName', // Usamos el nombre del usuario
-        'websiteUrl': '', // Opcional
-        'instagramHandle': '', // Opcional
+        'websiteUrl': '', 
+        'instagramHandle': '',
       });
     }
 

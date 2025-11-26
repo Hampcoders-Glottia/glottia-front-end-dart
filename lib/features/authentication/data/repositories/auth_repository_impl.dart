@@ -40,7 +40,7 @@ class AuthRepositoryImpl implements AuthRepository {
           name: 'User', // Placeholder
         ));
       }
-  } on ServerException catch (e) {
+  } on ServerException {
       return Left(ServerFailure());
   } catch (e) {
     return Left(ServerFailure());
