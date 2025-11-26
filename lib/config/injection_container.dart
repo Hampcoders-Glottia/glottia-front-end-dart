@@ -4,9 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_frontend/const/backend_urls.dart';
 import 'package:mobile_frontend/core/network/auth_interceptor.dart';
 import 'package:mobile_frontend/core/network/token_storage.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
-import 'package:mobile_frontend/features/restaurant/data/datasources/venue_remote_data_source.dart';
-import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
 
 // Authentication imports
 import '../features/authentication/domain/repositories/auth_repository.dart';
@@ -18,6 +15,7 @@ import '../features/authentication/data/datasources/auth_remote_data_source.dart
 import '../features/authentication/data/datasources/profile_remote_data_source.dart';
 
 // Dashboard imports 
+import '../features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
 import '../features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import '../features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import '../features/dashboard/domain/repositories/dashboard_repository.dart';
@@ -32,7 +30,8 @@ import '../features/dashboard/data/repositories/encounter_repository_impl.dart';
 import '../features/dashboard/data/datasources/encounter_remote_data_source.dart';
 
 // Venue imports
-
+import '../features/restaurant/data/datasources/venue_remote_data_source.dart';
+import '../features/restaurant/presentation/bloc/venue/venue_bloc.dart';
 
 final sl = GetIt.instance;
 

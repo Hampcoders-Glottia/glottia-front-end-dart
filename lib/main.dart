@@ -10,6 +10,8 @@ import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard/d
 import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
 import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
 import 'package:mobile_frontend/config/injection_container.dart' as di;
+import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
+import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,10 +45,16 @@ class MyApp extends StatelessWidget {
           
           '/language_selection': (context) => const LanguageSelectionScreen(),
           
-          // Inyectamos el DashboardBloc SOLO para esta ruta y mostramos la nueva pantalla
+          // Learner routes
           '/home': (context) => BlocProvider(
             create: (_) => di.sl<DashboardBloc>(), // Crea el BLoC usando GetIt
             child: const LearnerDashboardScreen(), // Muestra la vista del Aprendiz
+          ),
+
+          // Partner routes
+          "/owner_dashboard" : (context) => BlocProvider(
+            create: (_) => di.sl<VenueBloc>(),
+            child: const OwnerDashboardScreen(),
           ),
 
           '/create_encounter': (context) => const CreateEncounterScreen(),
