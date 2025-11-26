@@ -31,6 +31,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _zipController = TextEditingController();
   final _countryController = TextEditingController();
 
+  // Controllers for Partner fields 
+  final _businessNameController = TextEditingController();
+  final _legalNameController = TextEditingController();
+  final _rucController = TextEditingController();
+  final _contactPhoneController = TextEditingController();
+  final _descriptionController = TextEditingController();
+
   // Estado del formulario
   final _formKey = GlobalKey<FormState>();
   String _selectedUserType = 'learner'; // 'learner' o 'owner'
@@ -47,6 +54,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _cityController.dispose();
     _zipController.dispose();
     _countryController.dispose();
+    _businessNameController.dispose();
+    _legalNameController.dispose();
+    _rucController.dispose();
+    _contactPhoneController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -69,6 +81,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               city: _selectedUserType == 'learner' ? _cityController.text : null,
               postalCode: _selectedUserType == 'learner' ? _zipController.text : null,
               country: _selectedUserType == 'learner' ? _countryController.text : null,
+              // Solo enviamos datos de partner si es un Dueño de Local
+              businessName: _selectedUserType == 'owner' ? _businessNameController.text : null,
+              legalName: _selectedUserType == 'owner' ? _legalNameController.text : null,
+              taxId: _selectedUserType == 'owner' ? _rucController.text : null,
+              contactPhone: _selectedUserType == 'owner' ? _contactPhoneController.text : null,
+              description: _selectedUserType == 'owner' ? _descriptionController.text : null,
             ),
           );
     }
@@ -193,7 +211,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // --- SECCIÓN DIRECCIÓN (Expandible) ---
                     // Se muestra solo si es Aprendiz
                     AnimatedCrossFade(
-                      firstChild: Container(), // Espacio vacío si no es learner
+                      firstChild: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 25),
+                          const Text("Datos del Negocio", style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryBlue, fontSize: 16)),
+                          const SizedBox(height: 15),
+
+                          AuthField(
+                             controller: _businessNameController, 
+                             hintText: 'Nombre Comercial', 
+                             prefixIcon: Icons.store,
+                             validator: (v) => _selectedUserType == 'owner' && (v == null || v.isEmpty) ? 'Requerido' : null
+                           ),
+                          const SizedBox(height: 15),
+
+                          AuthField(
+                             controller: _legalNameController, 
+                             hintText: 'Razón Social', 
+                             prefixIcon: Icons.business,
+                             validator: (v) => _selectedUserType == 'owner' && (v == null || v.isEmpty) ? 'Requerido' : null
+                           ),
+                           const SizedBox(height: 15),
+
+                           Row(
+                            children: [
+                              Expanded(
+                                child:  
+                                AuthField(
+                                  controller: _rucController, 
+                                  hintText: 'RUC / Tax ID',
+                                  prefixIcon: Icons.badge_outlined,
+                                  validator: (v) => _selectedUserType == 'owner' && (v == null || v.isEmpty) ? 'Requerido' : null
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child:  
+                                AuthField(
+                                  controller: _contactPhoneController, 
+                                  hintText: 'Teléfono de Contacto',
+                                  prefixIcon: Icons.phone_outlined,
+                                  validator: (v) => _selectedUserType == 'owner' && (v == null || v.isEmpty) ? 'Requerido' : null
+                                ),
+                              ),
+                            ],
+                           ),
+                            const SizedBox(height: 15),
+                            AuthField(
+                              controller: _descriptionController, 
+                              hintText: 'Descripción del Negocio', 
+                              prefixIcon: Icons.description_outlined,
+                              validator: (v) => _selectedUserType == 'owner' && (v == null || v.isEmpty) ? 'Requerido' : null
+                            ),
+                        ],
+                      ),
                       secondChild: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -265,7 +337,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       crossFadeState: _selectedUserType == 'learner' 
                           ? CrossFadeState.showSecond 
                           : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 250),
                     ),
                     // -------------------------------------
 
