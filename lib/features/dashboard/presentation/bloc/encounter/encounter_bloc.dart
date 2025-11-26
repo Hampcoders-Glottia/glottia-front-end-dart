@@ -31,6 +31,7 @@ class EncounterBloc extends Bloc<EncounterEvent, EncounterState> {
 
     // 2. Crear los parámetros
     final params = EncounterCreationParams(
+      creatorId: event.creatorId,
       venueId: event.venueId,
       scheduledAt: scheduledAt,
       topic: event.topic,
