@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+// BLoCs
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
+
+// Pages
+// Authentication pages
 import 'package:mobile_frontend/features/authentication/presentation/pages/language_selection_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/login_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/register_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/welcome_screen.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard/dashboard_bloc.dart';
+// Dashboard pages
 import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
 import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
+// Restaurant pages
+import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart'; 
+
 import 'package:mobile_frontend/config/injection_container.dart' as di;
 
 void main() async {
@@ -36,21 +46,72 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Roboto',
         ),
         initialRoute: '/welcome',
-        routes: {
-          '/welcome': (context) => const WelcomeScreen(),
-          '/login': (context) => const LoginScreen(),
-          '/register': (context) => const RegisterScreen(),
-          
-          '/language_selection': (context) => const LanguageSelectionScreen(),
-          
-          // Inyectamos el DashboardBloc SOLO para esta ruta y mostramos la nueva pantalla
-          '/home': (context) => BlocProvider(
-            create: (_) => di.sl<DashboardBloc>(), // Crea el BLoC usando GetIt
-            child: const LearnerDashboardScreen(), // Muestra la vista del Aprendiz
-          ),
+        
+        // Usamos onGenerateRoute para manejar argumentos dinámicos
+        onGenerateRoute: (settings) {
+          switch (settings.name) {
+            
+            // Rutas simples (sin argumentos)
+            case '/welcome':
+              return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+            case '/login':
+              return MaterialPageRoute(builder: (_) => const LoginScreen());
+            case '/register':
+              return MaterialPageRoute(builder: (_) => const RegisterScreen());
+            case '/language_selection':
+              // Si language selection necesita el ID para guardarlo luego, habría que pasarlo.
+              // Por ahora lo dejamos simple.
+              return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
 
-          '/create_encounter': (context) => const CreateEncounterScreen(),
+            // --- RUTAS CON ARGUMENTOS (IDs REALES) ---
+
+            case '/home': // Learner Dashboard
+              // Extraemos el argumento que enviamos desde el Login
+              final args = settings.arguments as int?; 
+              if (args == null) {
+                 // Fallback de seguridad por si entramos mal
+                 return _errorRoute("Falta el Learner ID");
+              }
+              return MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => di.sl<DashboardBloc>(),
+                  child: LearnerDashboardScreen(learnerId: args), // Pasamos el ID
+                ),
+              );
+
+            case '/owner_dashboard': // Partner Dashboard
+              final args = settings.arguments as int?;
+              if (args == null) return _errorRoute("Falta el Partner ID");
+              
+              return MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => di.sl<VenueBloc>(), // Inyectamos VenueBloc aquí
+                  child: OwnerDashboardScreen(partnerId: args), // Pasamos el ID
+                ),
+              );
+
+            case '/create_encounter':
+              final args = settings.arguments as int?;
+              if (args == null) return _errorRoute("Falta el Creator ID");
+
+              return MaterialPageRoute(
+                builder: (_) => CreateEncounterScreen(learnerId: args), // Pasamos el ID
+              );
+
+            default:
+              return null;
+          }
         },
+      ),
+    );
+  }
+
+  // Pantalla de error simple para desarrollo
+  MaterialPageRoute _errorRoute(String message) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text("Error de Navegación")),
+        body: Center(child: Text(message)),
       ),
     );
   }

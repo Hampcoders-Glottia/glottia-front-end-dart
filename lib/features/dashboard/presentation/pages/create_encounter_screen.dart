@@ -6,20 +6,22 @@ import '../../../../config/injection_container.dart';
 import '../bloc/encounter/encounter_bloc.dart';
 
 class CreateEncounterScreen extends StatelessWidget {
-  const CreateEncounterScreen({super.key});
+  final int learnerId;
+  const CreateEncounterScreen({super.key, required this.learnerId});
 
   @override
   Widget build(BuildContext context) {
     // Inyectamos el BLoC aquí mismo para que la pantalla sea autónoma
     return BlocProvider(
       create: (_) => sl<EncounterBloc>(),
-      child: const _CreateEncounterView(),
+      child: _CreateEncounterView(learnerId: learnerId),
     );
   }
 }
 
 class _CreateEncounterView extends StatefulWidget {
-  const _CreateEncounterView();
+  final int learnerId;
+  const _CreateEncounterView({required this.learnerId});
 
   @override
   State<_CreateEncounterView> createState() => _CreateEncounterViewState();
@@ -53,8 +55,9 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
           topic: _topicController.text,
           language: _selectedLanguage,
           level: _selectedLevel,
-          venueId: 1, // Hardcoded por ahora como acordamos
-          creatorId: 1, // Aquí deberías obtener el ID real del usuario logueado
+          venueId: 1, // Si solo tienes un local de prueba, esto es aceptable por ahora. 
+                      // Idealmente, esto vendría de una pantalla anterior "Seleccionar Local".
+          creatorId: widget.learnerId, // Usamos el ID real del learner
         ),
       );
     }
