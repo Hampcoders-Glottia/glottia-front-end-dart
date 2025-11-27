@@ -1,81 +1,75 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_frontend/features/restaurant/data/datasources/venue_remote_data_source.dart';
+import 'package:equatable/equatable.dart';
+import 'package:mobile_frontend/features/restaurant/data/datasources/venue_remote_data_source.dart'; 
 
-// --- Eventos ---
-abstract class VenueEvent {}
-class LoadPartnerVenues extends VenueEvent {
-  final int partnerId;
-  LoadPartnerVenues(this.partnerId);
-}
-class CreateVenuePressed extends VenueEvent {
-  final int partnerId;
-  final String name;
-  final String address;
-  final String city;
-  final int venueTypeId; // Ej: 1 = Coworking
+part 'venue_event.dart';
+part 'venue_state.dart';
 
-  CreateVenuePressed({
-    required this.partnerId,
-    required this.name,
-    required this.address,
-    required this.city,
-    required this.venueTypeId,
-  });
-}
-
-// --- Estados ---
-abstract class VenueState {}
-class VenueInitial extends VenueState {}
-class VenueLoading extends VenueState {}
-class VenueLoaded extends VenueState {
-  final List<dynamic> venues;
-  VenueLoaded(this.venues);
-}
-class VenueCreatedSuccess extends VenueState {}
-class VenueError extends VenueState {
-  final String message;
-  VenueError(this.message);
-}
-
-// --- BLoC ---
 class VenueBloc extends Bloc<VenueEvent, VenueState> {
-  final VenueRemoteDataSource dataSource;
+  final VenueRemoteDataSource venueRemoteDataSource;
 
-  VenueBloc({required this.dataSource}) : super(VenueInitial()) {
+  VenueBloc({required this.venueRemoteDataSource}) : super(VenueInitial()) {
+    on<LoadPartnerVenues>(_onLoadPartnerVenues);
+    on<CreateVenuePressed>(_onCreateVenuePressed);
+  }
+
+  FutureOr<void> _onLoadPartnerVenues(
+      LoadPartnerVenues event, Emitter<VenueState> emit) async {
+    // 1. Emitir estado de carga
+    emit(VenueLoading());
     
-    on<LoadPartnerVenues>((event, emit) async {
-      emit(VenueLoading());
-      try {
-        final venues = await dataSource.getPartnerVenues(event.partnerId);
-        emit(VenueLoaded(venues));
-      } catch (e) {
-        emit(VenueError("Error cargando locales"));
-      }
-    });
+    try {
+      // 2. Llamar al datasource
+      final venues = await venueRemoteDataSource.getPartnerVenues(event.partnerId);
+      
+      // 3. Emitir éxito con los datos
+      emit(VenueLoaded(venues));
+    } catch (e) {
+      // 4. Manejar errores
+      emit(VenueError(e.toString()));
+    }
+  }
 
-    on<CreateVenuePressed>((event, emit) async {
-      emit(VenueLoading());
-      try {
-        // 1. Crear el Venue
-        final venueId = await dataSource.createVenue({
-          "name": event.name,
-          "street": event.address,
-          "city": event.city,
-          "state": event.city, // Simplificación
-          "postalCode": "00000",
-          "country": "Peru",
-          "venueTypeId": event.venueTypeId 
-        });
+  FutureOr<void> _onCreateVenuePressed(
+      CreateVenuePressed event, Emitter<VenueState> emit) async {
+    // Guardamos el estado actual por si hay error, para no perder la lista
+    // (Opcional, dependiendo de tu UX)
+    
+    emit(VenueLoading());
+    
+    try {
+      // PASO 1: Crear el Venue físico
+      final venueData = {
+        "name": event.name,
+        "street": event.street,
+        "city": event.city,
+        "state": event.state,
+        "postalCode": event.postalCode,
+        "country": event.country,
+        "venueTypeId": event.venueTypeId
+      };
 
-        // 2. Asociarlo al Partner
-        await dataSource.addVenueToPartnerRegistry(event.partnerId, venueId);
+      // Asumimos que createVenue retorna el ID (int)
+      final int newVenueId = await venueRemoteDataSource.createVenue(venueData);
 
-        emit(VenueCreatedSuccess());
-        // Recargar la lista
-        add(LoadPartnerVenues(event.partnerId));
-      } catch (e) {
-        emit(VenueError("No se pudo crear el local: $e"));
-      }
-    });
+      // PASO 2: Vincularlo al Partner (Usando el ID real)
+      await venueRemoteDataSource.addVenueToPartnerRegistry(
+          event.partnerId, 
+          newVenueId
+      );
+
+      // OPCIÓN A: Recargar la lista automáticamente (Recomendado para Dashboards)
+      // Esto disparará _onLoadPartnerVenues y actualizará la UI con el nuevo ítem
+      add(LoadPartnerVenues(event.partnerId));
+      
+      // OPCIÓN B: Si prefieres solo notificar éxito y navegar atrás manualmente:
+      // emit(const VenueOperationSuccess("Local creado correctamente"));
+
+    } catch (e) {
+      emit(VenueError("No se pudo registrar el local: ${e.toString()}"));
+      // Si falla, opcionalmente podrías intentar recargar la lista anterior
+      // add(LoadPartnerVenues(event.partnerId)); 
+    }
   }
 }
