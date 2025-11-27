@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
           // Partner routes
           "/owner_dashboard" : (context) => BlocProvider(
             create: (_) => di.sl<VenueBloc>(),
-            child: const OwnerDashboardScreen(),
+            child: const OwnerDashboardScreen(partnerId: 0), // Placeholder - se pasa el real desde login
           ),
 
           '/create_encounter': (context) => const CreateEncounterScreen(),

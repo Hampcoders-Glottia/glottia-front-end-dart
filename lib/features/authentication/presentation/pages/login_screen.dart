@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/data/models/profile_model.dart'; // Importante para verificar el rol
+import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -74,10 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
               // LÓGICA DE REDIRECCIÓN POR ROL
               final user = state.user;
 
-              // Verificamos si el usuario es un ProfileModel para acceder a businessRole
-              if (user is ProfileModel && user.businessRole == 'PARTNER') {
-                 // Si es Partner (Dueño), va a su Dashboard de gestión
-                 Navigator.of(context).pushReplacementNamed('/owner_dashboard');
+              // Verificamos el rol del usuario
+              if (user.userType == 'PARTNER' && user is ProfileModel && user.partnerId != null) {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => OwnerDashboardScreen(partnerId: user.partnerId!)));
               } else {
                  // Si es Learner (Aprendiz) o cualquier otro, va al flujo de aprendizaje
                  Navigator.of(context).pushReplacementNamed('/language_selection');

@@ -1,21 +1,44 @@
 import '../../domain/entities/user.dart';
 
 class ProfileModel extends User {
-  final String? businessRole; // 1. Nuevo campo para almacenar el rol
+
+  // IDs adicionales para lógica de negocio (Solución al hardcoding)
+  final int? userId;
+  final int? learnerId;
+  final int? partnerId;
 
   const ProfileModel({
-    required super.id,
-    required super.username,
-    required super.name,
-    this.businessRole, // 2. Agregado al constructor
-  });
+    required int id,
+    required String email,
+    required String firstName,
+    required String lastName,
+    required String userType,
+    this.userId,
+    this.learnerId,
+    this.partnerId,
+  }) : super(
+    id: id,
+    username: email,
+    name: '$firstName $lastName',
+    email: email,
+    firstName: firstName,
+    lastName: lastName,
+    userType: userType,
+  );
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      id: json['id'].toString(),
-      username: json['email'],
-      name: json['firstName'],
-      businessRole: json['businessRole'], // 3. IMPORTANTE: Mapeamos el rol desde el JSON
+      id: json['id'] as int,
+      email: json['email'] as String,
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
+      userType: json['businessRole'] as String, // Mapeamos el rol desde el JSON del backend
+      
+      // Capturamos los IDs específicos del rol si vienen en la respuesta
+      // (Tu backend ProfileResource los envía como 'learnerId' y 'partnerId' en el nivel raíz)
+      learnerId: json['learnerId'] as int?,
+      partnerId: json['partnerId'] as int?,
+      userId: json['userId'] as int?,
     );
   }
 
@@ -23,7 +46,8 @@ class ProfileModel extends User {
   static Map<String, dynamic> registerToJson({
     required String firstName,
     required String lastName,
-    required String username,
+    required String username, // Email
+    required String password, // Agregado porque es necesario para el registro completo
     required String businessRole,
     
     // Campos para Aprendiz (Learner)
@@ -33,7 +57,7 @@ class ProfileModel extends User {
     String? postalCode,
     String? country,
 
-    // Campos para Dueño de Local (Partner) - NUEVOS
+    // Campos para Dueño de Local (Partner)
     String? businessName,
     String? legalName,
     String? taxId,
@@ -44,7 +68,9 @@ class ProfileModel extends User {
       'firstName': firstName,
       'lastName': lastName,
       'email': username,
-      'age': 25, // Edad por defecto técnica
+      'username': username, // El backend IAM suele pedir username y password también en el DTO compuesto
+      'password': password,
+      'age': 25, // Edad por defecto técnica (o agregar campo al formulario si es necesario)
       'businessRole': businessRole,
     };
 
@@ -61,7 +87,7 @@ class ProfileModel extends User {
       });
     }
 
-    // Lógica para DUEÑO DE LOCAL (PARTNER) - Datos Reales
+    // Lógica para DUEÑO DE LOCAL (PARTNER)
     if (businessRole == 'PARTNER') {
       data.addAll({
         'businessName': businessName,
@@ -74,9 +100,24 @@ class ProfileModel extends User {
         'contactPersonName': '$firstName $lastName', // Usamos el nombre del usuario
         'websiteUrl': '', 
         'instagramHandle': '',
+        'subscriptionStatusId': 2, // 2 = ACTIVE (asumiendo ID por defecto para pruebas)
       });
     }
 
     return data;
+  }
+  
+  // Método auxiliar para crear una copia con userId inyectado (útil si viene del login separado)
+  ProfileModel copyWithUserId(int userId) {
+    return ProfileModel(
+      id: id,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      userType: userType,
+      learnerId: learnerId,
+      partnerId: partnerId,
+      userId: userId,
+    );
   }
 }

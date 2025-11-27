@@ -6,21 +6,21 @@ import '../bloc/venue/venue_bloc.dart';
 import 'create_venue_screen.dart'; 
 
 class OwnerDashboardScreen extends StatefulWidget {
-  const OwnerDashboardScreen({super.key});
+
+  final int partnerId;
+
+  const OwnerDashboardScreen({super.key, required this.partnerId});
 
   @override
   State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
 }
 
 class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
-  // TODO: Obtener ID real del Profile/Auth BLoC. 
-  // Como hicimos el fix de "hardcode", usa el ID de tu partner creado.
-  final int _currentPartnerId = 1; 
 
   @override
   void initState() {
     super.initState();
-    context.read<VenueBloc>().add(LoadPartnerVenues(_currentPartnerId));
+    context.read<VenueBloc>().add(LoadPartnerVenues(widget.partnerId));
   }
 
   @override
@@ -34,7 +34,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: kPrimaryBlue),
-            onPressed: () => context.read<VenueBloc>().add(LoadPartnerVenues(_currentPartnerId)),
+            onPressed: () => context.read<VenueBloc>().add(LoadPartnerVenues(widget.partnerId)),
           )
         ],
       ),
@@ -78,7 +78,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             MaterialPageRoute(
               builder: (_) => BlocProvider.value(
                 value: context.read<VenueBloc>(),
-                child: CreateVenueScreen(partnerId: _currentPartnerId),
+                child: CreateVenueScreen(partnerId: widget.partnerId),
               ),
             ),
           );
