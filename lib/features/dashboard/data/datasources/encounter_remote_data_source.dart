@@ -39,7 +39,7 @@ class EncounterRemoteDataSourceImpl implements EncounterRemoteDataSource {
       } else {
         throw ServerException();
       }
-    } on DioException catch (e) {
+    } on DioException {
       // Puedes inspeccionar e.response para ver errores específicos del backend
       throw ServerException();
     }
