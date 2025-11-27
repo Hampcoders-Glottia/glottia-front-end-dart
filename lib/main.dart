@@ -20,8 +20,6 @@ import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_da
 import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart'; 
 
 import 'package:mobile_frontend/config/injection_container.dart' as di;
-import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
-import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
