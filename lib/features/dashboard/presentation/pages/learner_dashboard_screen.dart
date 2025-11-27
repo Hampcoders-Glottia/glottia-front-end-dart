@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
 import '../../domain/entities/encounter.dart';
 import '../../domain/entities/loyalty_stats.dart';
 import '../bloc/dashboard/dashboard_bloc.dart';
@@ -9,7 +10,8 @@ import '../bloc/dashboard/dashboard_event.dart';
 import '../bloc/dashboard/dashboard_state.dart';
 
 class LearnerDashboardScreen extends StatefulWidget {
-  const LearnerDashboardScreen({super.key});
+  final int learnerId;
+  const LearnerDashboardScreen({super.key, required this.learnerId});
 
   @override
   State<LearnerDashboardScreen> createState() => _LearnerDashboardScreenState();
@@ -19,7 +21,7 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(LoadDashboardData());
+    context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
   }
 
   @override
@@ -69,7 +71,7 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
             return _buildErrorState(state.message);
           } else if (state is DashboardLoaded) {
             return RefreshIndicator(
-              onRefresh: () async => context.read<DashboardBloc>().add(LoadDashboardData()),
+              onRefresh: () async => context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId)),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20.0),
@@ -122,10 +124,14 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
       // Botón Flotante para Acción Principal
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-           final result = await Navigator.of(context).pushNamed('/create_encounter');
-           // Si se creó, recargamos el dashboard
+          // Pasamos el learnerId a la pantalla de creacion
+           final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CreateEncounterScreen(learnerId: widget.learnerId),
+            ),
+          );
            if (result == true) {
-            context.read<DashboardBloc>().add(LoadDashboardData());
+            context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
            }
         },
         backgroundColor: kPrimaryBlue,
@@ -144,7 +150,7 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
           const SizedBox(height: 10),
           Text(message, textAlign: TextAlign.center),
           TextButton(
-            onPressed: () => context.read<DashboardBloc>().add(LoadDashboardData()),
+            onPressed: () => context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId)),
             child: const Text("Reintentar"),
           )
         ],

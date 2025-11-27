@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/loyalty_stats.dart'; // Nueva entidad
-import '../../../domain/entities/encounter.dart';     // Nueva entidad
+import '../../../domain/entities/encounter.dart';
+import '../../../domain/entities/loyalty_stats.dart';
 
 abstract class DashboardState extends Equatable {
   const DashboardState();
@@ -14,8 +14,8 @@ class DashboardInitial extends DashboardState {}
 class DashboardLoading extends DashboardState {}
 
 class DashboardLoaded extends DashboardState {
-  final LoyaltyStats stats;          // Tipo actualizado
-  final List<Encounter> reservations; // Tipo actualizado
+  final LoyaltyStats stats;
+  final List<Encounter> reservations;
 
   const DashboardLoaded({
     required this.stats,

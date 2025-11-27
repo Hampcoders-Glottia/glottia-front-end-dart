@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import '../bloc/venue/venue_bloc.dart';
 
-
 class CreateVenueScreen extends StatefulWidget {
   final int partnerId;
   const CreateVenueScreen({super.key, required this.partnerId});
@@ -14,11 +13,44 @@ class CreateVenueScreen extends StatefulWidget {
 
 class _CreateVenueScreenState extends State<CreateVenueScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
-  final _cityCtrl = TextEditingController();
-  
-  int _selectedType = 1; // Default 1: COWORKING, 2: RESTAURANT, 3: CAFE
+  // Controllers
+  final _nameController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _countryController = TextEditingController();
+  // ... otros controllers (state, postalCode) si los tienes en UI
+
+  // Valores por defecto para simplificar demo
+  final String _defaultState = "Lima";
+  final String _defaultZip = "15001";
+  int _selectedTypeId = 2; // Restaurant por defecto
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _countryController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      context.read<VenueBloc>().add(
+        CreateVenuePressed(
+          name: _nameController.text,
+          street: _streetController.text,
+          city: _cityController.text,
+          country: _countryController.text,
+          state: _defaultState, // O agregar campo
+          postalCode: _defaultZip, // O agregar campo
+          venueTypeId: _selectedTypeId,
+          partnerId: widget.partnerId, // <--- USO DEL ID REAL
+        ),
+      );
+      Navigator.pop(context); // Cierra la pantalla tras enviar
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
