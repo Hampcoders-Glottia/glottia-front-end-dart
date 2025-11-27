@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/create_reservation.dart';
-import '../../domain/entities/reservation_params.dart';
-import '../../../../core/error/failures.dart';
+import '../../../domain/usecases/create_reservation.dart';
+import '../../../domain/entities/reservation_params.dart';
+import '../../../../../core/error/failures.dart';
 
 part 'new_reservation_event.dart';
 part 'new_reservation_state.dart';

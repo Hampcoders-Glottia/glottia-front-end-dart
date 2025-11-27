@@ -4,8 +4,7 @@ import 'package:mobile_frontend/config/theme/app_colors.dart';
 import '../bloc/venue/venue_bloc.dart';
 
 class CreateVenueScreen extends StatefulWidget {
-  final int partnerId; // <--- Recibe el ID real
-
+  final int partnerId;
   const CreateVenueScreen({super.key, required this.partnerId});
 
   @override
@@ -57,64 +56,76 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Registrar Nuevo Local")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Nombre del Local"),
-                validator: (v) => v!.isEmpty ? "Campo requerido" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _streetController,
-                decoration: const InputDecoration(labelText: "Dirección (Calle y Número)"),
-                validator: (v) => v!.isEmpty ? "Campo requerido" : null,
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(labelText: "Ciudad"),
-                      validator: (v) => v!.isEmpty ? "Requerido" : null,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(labelText: "País"),
-                      validator: (v) => v!.isEmpty ? "Requerido" : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<int>(
-                value: _selectedTypeId,
-                decoration: const InputDecoration(labelText: "Tipo de Local"),
-                items: const [
-                  DropdownMenuItem(value: 1, child: Text("Coworking")),
-                  DropdownMenuItem(value: 2, child: Text("Restaurante")),
-                  DropdownMenuItem(value: 3, child: Text("Cafetería")),
-                ],
-                onChanged: (v) => setState(() => _selectedTypeId = v!),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryBlue,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+      body: BlocListener<VenueBloc, VenueState>(
+        listener: (context, state) {
+          if (state is VenueCreatedSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("¡Local creado exitosamente!"), backgroundColor: Colors.green),
+            );
+            Navigator.of(context).pop();
+          }
+          if (state is VenueError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nameCtrl,
+                  decoration: const InputDecoration(labelText: "Nombre del Local", border: OutlineInputBorder()),
+                  validator: (v) => v!.isEmpty ? "Requerido" : null,
                 ),
-                child: const Text("Registrar Local", style: TextStyle(color: Colors.white)),
-              )
-            ],
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _addressCtrl,
+                  decoration: const InputDecoration(labelText: "Dirección", border: OutlineInputBorder()),
+                  validator: (v) => v!.isEmpty ? "Requerido" : null,
+                ),
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _cityCtrl,
+                  decoration: const InputDecoration(labelText: "Ciudad", border: OutlineInputBorder()),
+                  validator: (v) => v!.isEmpty ? "Requerido" : null,
+                ),
+                const SizedBox(height: 20),
+                DropdownButtonFormField<int>(
+                  value: _selectedType,
+                  decoration: const InputDecoration(labelText: "Tipo de Local", border: OutlineInputBorder()),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text("Coworking")),
+                    DropdownMenuItem(value: 2, child: Text("Restaurante")),
+                    DropdownMenuItem(value: 3, child: Text("Café")),
+                  ],
+                  onChanged: (v) => setState(() => _selectedType = v!),
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: kPrimaryBlue),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        context.read<VenueBloc>().add(CreateVenuePressed(
+                          partnerId: widget.partnerId,
+                          name: _nameCtrl.text,
+                          address: _addressCtrl.text,
+                          city: _cityCtrl.text,
+                          venueTypeId: _selectedType
+                        ));
+                      }
+                    },
+                    child: const Text("Guardar Local", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

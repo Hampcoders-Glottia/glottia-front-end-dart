@@ -37,9 +37,8 @@ class EncounterRemoteDataSourceImpl implements EncounterRemoteDataSource {
       } else {
         throw ServerException();
       }
-    } on DioException catch (e) {
-      // Loguear error para depuración
-      // print("Error creando encounter: ${e.response?.data}");
+    } on DioException {
+      // Puedes inspeccionar e.response para ver errores específicos del backend
       throw ServerException();
     }
   }

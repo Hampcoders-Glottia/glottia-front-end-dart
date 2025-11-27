@@ -1,91 +1,123 @@
 import '../../domain/entities/user.dart';
 
-// UserModel - Modelo para respuestas de autenticación
-class UserModel extends User {
-  const UserModel({
-    required super.id,
-    required super.username,
-    required super.name,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'].toString(),
-      username: json['username'],
-      name: json['name'] ?? json['firstName'] ?? '', // Flexible con el nombre del campo
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'name': name,
-    };
-  }
-}
-
-// ProfileModel - Modelo para operaciones de perfil
 class ProfileModel extends User {
+
+  // IDs adicionales para lógica de negocio (Solución al hardcoding)
+  final int? userId;
+  final int? learnerId;
+  final int? partnerId;
+
   const ProfileModel({
-    required super.id,
-    required super.username,
-    required super.name,
-  });
+    required int id,
+    required String email,
+    required String firstName,
+    required String lastName,
+    required String userType,
+    this.userId,
+    this.learnerId,
+    this.partnerId,
+  }) : super(
+    id: id,
+    username: email,
+    name: '$firstName $lastName',
+    email: email,
+    firstName: firstName,
+    lastName: lastName,
+    userType: userType,
+  );
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      id: json['id'].toString(),
-      username: json['email'],
-      name: json['firstName'], // Tu backend usa 'firstName'
+      id: json['id'] as int,
+      email: json['email'] as String,
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
+      userType: json['businessRole'] as String, // Mapeamos el rol desde el JSON del backend
+      
+      // Capturamos los IDs específicos del rol si vienen en la respuesta
+      // (Tu backend ProfileResource los envía como 'learnerId' y 'partnerId' en el nivel raíz)
+      learnerId: json['learnerId'] as int?,
+      partnerId: json['partnerId'] as int?,
+      userId: json['userId'] as int?,
     );
   }
 
-  // Método para convertir nuestros datos de registro a JSON para el POST
+  // Método para convertir datos de registro a JSON para el Backend
   static Map<String, dynamic> registerToJson({
     required String firstName,
     required String lastName,
-    required String username,
+    required String username, // Email
+    required String password, // Agregado porque es necesario para el registro completo
     required String businessRole,
-    // (Tu backend espera 'age' y 'businessRole', los omitiremos por ahora)
+    
+    // Campos para Aprendiz (Learner)
     String? street,
     String? number,
     String? city,
     String? postalCode,
     String? country,
+
+    // Campos para Dueño de Local (Partner)
+    String? businessName,
+    String? legalName,
+    String? taxId,
+    String? contactPhone,
+    String? description,
   }) {
     final Map<String, dynamic> data = {
       'firstName': firstName,
       'lastName': lastName,
       'email': username,
-      'age': 25, // Edad hardcodeada válida (Backend requiere int)
+      'username': username, // El backend IAM suele pedir username y password también en el DTO compuesto
+      'password': password,
+      'age': 25, // Edad por defecto técnica (o agregar campo al formulario si es necesario)
       'businessRole': businessRole,
     };
 
-    // ¡OJO AQUÍ! Esta es la parte que fallaba.
-    // El backend lanza excepción si street es null.
-    // Enviamos la data SI el rol es LEARNER.
+    // Lógica para APRENDIZ (LEARNER)
     if (businessRole == 'LEARNER') {
-      data['street'] = street ?? 'Sin Calle';
-      data['number'] = number ?? '0';
-      data['city'] = city ?? 'Sin Ciudad';
-      data['postalCode'] = postalCode ?? '00000';
-      data['country'] = country ?? 'Sin Pais';
-      data['latitude'] = 0.0;
-      data['longitude'] = 0.0;
+      data.addAll({
+        'street': street ?? 'Sin Calle',
+        'number': number ?? '0',
+        'city': city ?? 'Sin Ciudad',
+        'postalCode': postalCode ?? '00000',
+        'country': country ?? 'Sin Pais',
+        'latitude': 0.0,
+        'longitude': 0.0,
+      });
     }
-    
-    // Si es PARTNER, añadimos datos dummy de negocio para que no falle
+
+    // Lógica para DUEÑO DE LOCAL (PARTNER)
     if (businessRole == 'PARTNER') {
-       data['legalName'] = '$firstName $lastName Enterprise';
-       data['businessName'] = '$firstName\'s Place';
-       data['taxId'] = '${DateTime.now().millisecondsSinceEpoch}'; // Tax ID único temporal
-       data['contactEmail'] = username;
-       data['contactPhone'] = '999999999';
-       data['contactPersonName'] = '$firstName $lastName';
-       data['description'] = 'Nuevo local registrado desde la app';
+      data.addAll({
+        'businessName': businessName,
+        'legalName': legalName,
+        'taxId': taxId,
+        'contactPhone': contactPhone,
+        'description': description,
+        // Datos complementarios requeridos por el Backend
+        'contactEmail': username, // Usamos el mismo email de registro
+        'contactPersonName': '$firstName $lastName', // Usamos el nombre del usuario
+        'websiteUrl': '', 
+        'instagramHandle': '',
+        'subscriptionStatusId': 2, // 2 = ACTIVE (asumiendo ID por defecto para pruebas)
+      });
     }
 
     return data;
+  }
+  
+  // Método auxiliar para crear una copia con userId inyectado (útil si viene del login separado)
+  ProfileModel copyWithUserId(int userId) {
+    return ProfileModel(
+      id: id,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      userType: userType,
+      learnerId: learnerId,
+      partnerId: partnerId,
+      userId: userId,
+    );
   }
 }
