@@ -141,7 +141,7 @@ Future<void> init() async {
   // ---------------------------------------
   // Venue Feature 
   sl.registerLazySingleton(() => VenueRemoteDataSource(dio: sl()));
-  sl.registerFactory(() => VenueBloc(dataSource: sl()));
+  sl.registerFactory(() => VenueBloc(venueRemoteDataSource: sl()));
 
   //! Core
   // sl.registerLazySingleton<NetworkInfo>(
