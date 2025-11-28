@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
+import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_event.dart';
+import '../../../restaurant/presentation/pages/venue_selection_screen.dart';
 import '../../domain/entities/encounter.dart';
 import '../../domain/entities/loyalty_stats.dart';
 import '../bloc/dashboard/dashboard_bloc.dart';
@@ -61,6 +63,15 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
             icon: const Icon(Icons.notifications_none, color: Colors.black87),
             onPressed: () {},
           ),
+          // Button logout
+          IconButton(
+            tooltip: "Cerrar sesión",
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            onPressed: () {
+              context.read<AuthBloc>().add(LogoutRequested());
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+            },
+          )
         ],
       ),
       body: BlocBuilder<DashboardBloc, DashboardState>(
@@ -124,15 +135,15 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
       // Botón Flotante para Acción Principal
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Pasamos el learnerId a la pantalla de creacion
-           final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => CreateEncounterScreen(learnerId: widget.learnerId),
-            ),
-          );
-           if (result == true) {
+          // 1. Primero vamos a la selección de local
+          Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => VenueSelectionScreen(learnerId: widget.learnerId),
+          ),
+          ).then((_) {
+            // 2. Cuando regrese (después de reservar), recargamos el dashboard
             context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
-           }
+          });
         },
         backgroundColor: kPrimaryBlue,
         icon: const Icon(Icons.add_location_alt_outlined, color: Colors.white),

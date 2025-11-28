@@ -95,7 +95,7 @@ class MyApp extends StatelessWidget {
               if (args == null) return _errorRoute("Falta el Creator ID");
 
               return MaterialPageRoute(
-                builder: (_) => CreateEncounterScreen(learnerId: args), // Pasamos el ID
+                builder: (_) => CreateEncounterScreen(learnerId: args, venueId: args), // Pasamos el ID
               );
 
             default:
