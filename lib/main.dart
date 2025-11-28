@@ -14,7 +14,6 @@ import 'package:mobile_frontend/features/authentication/presentation/pages/login
 import 'package:mobile_frontend/features/authentication/presentation/pages/register_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/welcome_screen.dart';
 // Dashboard pages
-import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
 import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
 // Restaurant pages
 import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart'; 
@@ -59,23 +58,19 @@ class MyApp extends StatelessWidget {
             case '/register':
               return MaterialPageRoute(builder: (_) => const RegisterScreen());
             case '/language_selection':
-              // Si language selection necesita el ID para guardarlo luego, habría que pasarlo.
-              // Por ahora lo dejamos simple.
               return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
 
             // --- RUTAS CON ARGUMENTOS (IDs REALES) ---
 
             case '/home': // Learner Dashboard
-              // Extraemos el argumento que enviamos desde el Login
               final args = settings.arguments as int?; 
               if (args == null) {
-                 // Fallback de seguridad por si entramos mal
                  return _errorRoute("Falta el Learner ID");
               }
               return MaterialPageRoute(
                 builder: (_) => BlocProvider(
                   create: (_) => di.sl<DashboardBloc>(),
-                  child: LearnerDashboardScreen(learnerId: args), // Pasamos el ID
+                  child: LearnerDashboardScreen(learnerId: args),
                 ),
               );
 
@@ -85,17 +80,9 @@ class MyApp extends StatelessWidget {
               
               return MaterialPageRoute(
                 builder: (_) => BlocProvider(
-                  create: (_) => di.sl<VenueBloc>(), // Inyectamos VenueBloc aquí
-                  child: OwnerDashboardScreen(partnerId: args), // Pasamos el ID
+                  create: (_) => di.sl<VenueBloc>(),
+                  child: OwnerDashboardScreen(partnerId: args),
                 ),
-              );
-
-            case '/create_encounter':
-              final args = settings.arguments as int?;
-              if (args == null) return _errorRoute("Falta el Creator ID");
-
-              return MaterialPageRoute(
-                builder: (_) => CreateEncounterScreen(learnerId: args, venueId: args), // Pasamos el ID
               );
 
             default:
