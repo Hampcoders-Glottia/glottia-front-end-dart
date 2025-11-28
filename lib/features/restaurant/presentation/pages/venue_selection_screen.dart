@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_frontend/config/injection_container.dart' as di;
-import 'package:mobile_frontend/config/theme/app_colors.dart';
-import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/pages/create_encounter_screen.dart';
+import '../../../../config/injection_container.dart';
+import '../../../dashboard/presentation/pages/create_encounter_screen.dart';
+import '../bloc/venue/venue_bloc.dart';
+import '../widgets/venue_card.dart'; 
 
 class VenueSelectionScreen extends StatelessWidget {
   final int learnerId;
@@ -12,85 +12,100 @@ class VenueSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<VenueBloc>()..add(LoadAllVenues()), 
+      child: _VenueSelectionView(learnerId: learnerId),
+    );
+  }
+}
+
+class _VenueSelectionView extends StatefulWidget {
+  final int learnerId;
+  const _VenueSelectionView({required this.learnerId});
+
+  @override
+  State<_VenueSelectionView> createState() => _VenueSelectionViewState();
+}
+
+class _VenueSelectionViewState extends State<_VenueSelectionView> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Elige un lugar", style: TextStyle(color: Colors.black87)),
+        title: const Text("Elige un lugar", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: kPrimaryBlue),
-      ),
-      body: BlocProvider(
-        create: (_) => di.sl<VenueBloc>()..add(LoadAllVenues()), // ¡Carga los locales al abrir!
-        child: BlocBuilder<VenueBloc, VenueState>(
-          builder: (context, state) {
-            if (state is VenueLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is VenueLoaded) {
-              if (state.venues.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.storefront_sharp, size: 64, color: Colors.grey[300]),
-                      const SizedBox(height: 16),
-                      const Text("No hay locales disponibles aún."),
-                    ],
-                  ),
-                );
-              }
-              // LISTA DE LOCALES REALES
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: state.venues.length,
-                itemBuilder: (context, index) {
-                  final venue = state.venues[index];
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(12),
-                      leading: Container(
-                        width: 50, height: 50,
-                        decoration: BoxDecoration(
-                          color: kPrimaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.store, color: kPrimaryBlue),
-                      ),
-                      title: Text(
-                        venue['name'] ?? 'Sin nombre',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                         venue['address'] != null 
-                          ? "${venue['address']['street']}, ${venue['address']['city']}" 
-                          : "Ubicación desconocida",
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: kPrimaryBlue),
-                      onTap: () {
-                        // AL HACER CLIC: Vamos a reservar EN ESTE local específico
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => CreateEncounterScreen(
-                              learnerId: learnerId,
-                              venueId: venue['venueId'], // PASAMOS EL ID REAL DEL LOCAL
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              );
-            } else if (state is VenueError) {
-              return Center(child: Text("Error: ${state.message}"));
-            }
-            return const SizedBox.shrink();
-          },
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
+      ),
+      body: Column(
+        children: [
+          // Barra de búsqueda (Podrías extraerla también si quieres)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Container(
+              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(15)),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: "Buscar...",
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 15),
+                ),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: BlocBuilder<VenueBloc, VenueState>(
+              builder: (context, state) {
+                if (state is VenueLoading) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFFFE724C)));
+                } else if (state is VenueError) {
+                  return Center(child: Text(state.message));
+                } else if (state is VenueLoaded) {
+                  if (state.venues.isEmpty) {
+                    return const Center(child: Text("No hay locales disponibles"));
+                  }
+                  
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: state.venues.length,
+                    itemBuilder: (context, index) {
+                      final venue = state.venues[index];
+                      
+                      // USAMOS EL WIDGET EXTRAÍDO
+                      return VenueCard(
+                        venue: venue,
+                        onTap: () {
+                          // La navegación se define aquí, manteniendo el widget puro
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CreateEncounterScreen(
+                                learnerId: widget.learnerId,
+                                venueId: venue['id'], // O venue.id según tu modelo
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
