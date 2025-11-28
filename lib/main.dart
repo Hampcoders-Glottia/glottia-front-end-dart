@@ -4,7 +4,6 @@ import 'package:intl/date_symbol_data_local.dart';
 
 // BLoCs
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/bloc/dashboard/dashboard_bloc.dart';
 import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
 
 // Pages
@@ -13,8 +12,10 @@ import 'package:mobile_frontend/features/authentication/presentation/pages/langu
 import 'package:mobile_frontend/features/authentication/presentation/pages/login_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/register_screen.dart';
 import 'package:mobile_frontend/features/authentication/presentation/pages/welcome_screen.dart';
+
 // Dashboard pages
-import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_dashboard_screen.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_navigation_screen.dart';
+
 // Restaurant pages
 import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart'; 
 
@@ -46,35 +47,42 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/welcome',
         
-        // Usamos onGenerateRoute para manejar argumentos dinámicos
         onGenerateRoute: (settings) {
           switch (settings.name) {
             
-            // Rutas simples (sin argumentos)
+            // --- RUTAS DE AUTENTICACIÓN ---
             case '/welcome':
               return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+            
             case '/login':
               return MaterialPageRoute(builder: (_) => const LoginScreen());
+            
             case '/register':
               return MaterialPageRoute(builder: (_) => const RegisterScreen());
+            
+            // Ahora LanguageSelectionScreen requiere un learnerId
             case '/language_selection':
-              return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
-
-            // --- RUTAS CON ARGUMENTOS (IDs REALES) ---
-
-            case '/home': // Learner Dashboard
-              final args = settings.arguments as int?; 
-              if (args == null) {
-                 return _errorRoute("Falta el Learner ID");
-              }
+              final args = settings.arguments as int?;
+              if (args == null) return _errorRoute("Falta el Learner ID para selección de idioma");
+              
               return MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => di.sl<DashboardBloc>(),
-                  child: LearnerDashboardScreen(learnerId: args),
-                ),
+                builder: (_) => LanguageSelectionScreen(learnerId: args),
               );
 
-            case '/owner_dashboard': // Partner Dashboard
+            // --- RUTAS PRINCIPALES (DASHBOARDS) ---
+
+            case '/home': // Dashboard del Learner (Aprendiz)
+              final args = settings.arguments as int?; 
+              if (args == null) return _errorRoute("Falta el Learner ID");
+              
+              // Navegamos al LearnerNavigationScreen
+              // Nota: Ya no envolvemos en DashboardBloc aquí, porque las sub-pantallas
+              // (como LearnerHomeScreen) manejan sus propios BLoCs (EncounterBloc).
+              return MaterialPageRoute(
+                builder: (_) => LearnerNavigationScreen(learnerId: args),
+              );
+
+            case '/owner_dashboard': // Dashboard del Partner (Dueño de local)
               final args = settings.arguments as int?;
               if (args == null) return _errorRoute("Falta el Partner ID");
               

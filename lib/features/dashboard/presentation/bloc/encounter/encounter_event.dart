@@ -24,4 +24,15 @@ class CreateEncounterPressed extends EncounterEvent {
     required this.venueId,
     required this.creatorId,
   });
+
+}
+
+class SearchEncountersRequested extends EncounterEvent {
+  final String? date;
+  final int? languageId;
+
+  const SearchEncountersRequested({this.date, this.languageId});
+
+  @override
+  List<Object> get props => [date ?? '', languageId ?? 0];
 }
