@@ -5,6 +5,7 @@ import '../bloc/venue/venue_bloc.dart';
 
 class CreateVenueScreen extends StatefulWidget {
   final int partnerId;
+
   const CreateVenueScreen({super.key, required this.partnerId});
 
   @override
@@ -13,17 +14,18 @@ class CreateVenueScreen extends StatefulWidget {
 
 class _CreateVenueScreenState extends State<CreateVenueScreen> {
   final _formKey = GlobalKey<FormState>();
-  // Controllers
+  
+  // Controllers para los campos del formulario
   final _nameController = TextEditingController();
   final _streetController = TextEditingController();
   final _cityController = TextEditingController();
   final _countryController = TextEditingController();
-  // ... otros controllers (state, postalCode) si los tienes en UI
-
-  // Valores por defecto para simplificar demo
-  final String _defaultState = "Lima";
+  // Campos adicionales con valores por defecto para simplificar (puedes agregar inputs si quieres)
+  final String _defaultState = "Lima"; 
   final String _defaultZip = "15001";
-  int _selectedTypeId = 2; // Restaurant por defecto
+  
+  // Valor inicial para el dropdown (2 = Restaurante)
+  int _selectedTypeId = 2; 
 
   @override
   void dispose() {
@@ -35,100 +37,187 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
   }
 
   void _submit() {
+    // Ocultar teclado
+    FocusScope.of(context).unfocus();
+
     if (_formKey.currentState!.validate()) {
+      // Disparar evento al BLoC
       context.read<VenueBloc>().add(
         CreateVenuePressed(
-          name: _nameController.text,
-          street: _streetController.text,
-          city: _cityController.text,
-          country: _countryController.text,
-          state: _defaultState, // O agregar campo
-          postalCode: _defaultZip, // O agregar campo
+          name: _nameController.text.trim(),
+          street: _streetController.text.trim(),
+          city: _cityController.text.trim(),
+          country: _countryController.text.trim(),
+          state: _defaultState,
+          postalCode: _defaultZip,
           venueTypeId: _selectedTypeId,
-          partnerId: widget.partnerId, // <--- USO DEL ID REAL
+          partnerId: widget.partnerId, // Usamos el ID real que recibimos
         ),
       );
-      Navigator.pop(context); // Cierra la pantalla tras enviar
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Registrar Nuevo Local")),
-      body: BlocListener<VenueBloc, VenueState>(
+      appBar: AppBar(
+        title: const Text("Registrar Nuevo Local"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+      body: BlocConsumer<VenueBloc, VenueState>(
+        // Listener: Para efectos secundarios (Navegación, Snackbars)
         listener: (context, state) {
-          if (state is VenueCreatedSuccess) {
+          if (state is VenueLoaded) { 
+            // Asumimos que si vuelve a VenueLoaded después de Loading es porque tuvo éxito
+            // O si implementaste VenueOperationSuccess, usa ese estado
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("¡Local creado exitosamente!"), backgroundColor: Colors.green),
+              const SnackBar(
+                content: Text("¡Local registrado exitosamente!"),
+                backgroundColor: Colors.green,
+              ),
             );
-            Navigator.of(context).pop();
-          }
-          if (state is VenueError) {
+            Navigator.of(context).pop(); // Regresar al Dashboard
+          } else if (state is VenueError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent,
+              ),
             );
           }
         },
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: "Nombre del Local", border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? "Requerido" : null,
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: _addressCtrl,
-                  decoration: const InputDecoration(labelText: "Dirección", border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? "Requerido" : null,
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: _cityCtrl,
-                  decoration: const InputDecoration(labelText: "Ciudad", border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? "Requerido" : null,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<int>(
-                  value: _selectedType,
-                  decoration: const InputDecoration(labelText: "Tipo de Local", border: OutlineInputBorder()),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text("Coworking")),
-                    DropdownMenuItem(value: 2, child: Text("Restaurante")),
-                    DropdownMenuItem(value: 3, child: Text("Café")),
-                  ],
-                  onChanged: (v) => setState(() => _selectedType = v!),
-                ),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: kPrimaryBlue),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        context.read<VenueBloc>().add(CreateVenuePressed(
-                          partnerId: widget.partnerId,
-                          name: _nameCtrl.text,
-                          address: _addressCtrl.text,
-                          city: _cityCtrl.text,
-                          venueTypeId: _selectedType
-                        ));
-                      }
-                    },
-                    child: const Text("Guardar Local", style: TextStyle(color: Colors.white, fontSize: 16)),
+        // Builder: Para reconstruir la UI (Loading spinner)
+        builder: (context, state) {
+          final isLoading = state is VenueLoading;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Información del Establecimiento",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kPrimaryBlue),
                   ),
-                )
-              ],
+                  const SizedBox(height: 20),
+
+                  // Nombre del Local
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: _inputDecoration("Nombre del Local", Icons.store),
+                    textInputAction: TextInputAction.next,
+                    validator: (v) => v!.isEmpty ? "El nombre es obligatorio" : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Tipo de Local (Dropdown)
+                  DropdownButtonFormField<int>(
+                    value: _selectedTypeId,
+                    decoration: _inputDecoration("Tipo de Negocio", Icons.category),
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text("Coworking Space")),
+                      DropdownMenuItem(value: 2, child: Text("Restaurante")),
+                      DropdownMenuItem(value: 3, child: Text("Cafetería")),
+                    ],
+                    onChanged: (v) => setState(() => _selectedTypeId = v!),
+                  ),
+                  
+                  const SizedBox(height: 30),
+                  const Text(
+                    "Ubicación",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kPrimaryBlue),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Dirección
+                  TextFormField(
+                    controller: _streetController,
+                    decoration: _inputDecoration("Calle y Número", Icons.location_on),
+                    textInputAction: TextInputAction.next,
+                    validator: (v) => v!.isEmpty ? "La dirección es obligatoria" : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Ciudad y País (En fila)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _cityController,
+                          decoration: _inputDecoration("Ciudad", Icons.location_city),
+                          textInputAction: TextInputAction.next,
+                          validator: (v) => v!.isEmpty ? "Requerido" : null,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _countryController,
+                          decoration: _inputDecoration("País", Icons.public),
+                          textInputAction: TextInputAction.done,
+                          validator: (v) => v!.isEmpty ? "Requerido" : null,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Botón Guardar
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryBlue,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 24, width: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text(
+                              "Guardar Local",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
+    );
+  }
+
+  // Helper para estilos consistentes
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.grey),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.grey),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: kPrimaryBlue, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
     );
   }
 }

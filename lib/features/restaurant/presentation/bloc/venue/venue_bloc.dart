@@ -12,6 +12,7 @@ class VenueBloc extends Bloc<VenueEvent, VenueState> {
   VenueBloc({required this.venueRemoteDataSource}) : super(VenueInitial()) {
     on<LoadPartnerVenues>(_onLoadPartnerVenues);
     on<CreateVenuePressed>(_onCreateVenuePressed);
+    on<LoadAllVenues>(_onLoadAllVenues);
   }
 
   FutureOr<void> _onLoadPartnerVenues(
@@ -70,6 +71,17 @@ class VenueBloc extends Bloc<VenueEvent, VenueState> {
       emit(VenueError("No se pudo registrar el local: ${e.toString()}"));
       // Si falla, opcionalmente podrías intentar recargar la lista anterior
       // add(LoadPartnerVenues(event.partnerId)); 
+    }
+  }
+
+  FutureOr<void> _onLoadAllVenues(
+    LoadAllVenues event, Emitter<VenueState> emit) async {
+    emit(VenueLoading());
+    try {
+      final venues = await venueRemoteDataSource.getAllVenues();
+      emit(VenueLoaded(venues));
+    } catch (e) {
+      emit(VenueError(e.toString()));
     }
   }
 }
