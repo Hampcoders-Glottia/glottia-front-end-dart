@@ -16,3 +16,15 @@ class EncounterFailure extends EncounterState {
   @override
   List<Object> get props => [message];
 }
+
+class EncounterSearchSuccess extends EncounterState {
+  final List<Encounter> encounters;
+
+  const EncounterSearchSuccess(this.encounters);
+
+  @override
+  List<Object> get props => [encounters];
+}
+
+// Estado de éxito para creación (para diferenciarlo)
+class EncounterCreationSuccess extends EncounterState {}

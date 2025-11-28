@@ -15,6 +15,7 @@ import '../features/authentication/data/datasources/auth_remote_data_source.dart
 import '../features/authentication/data/datasources/profile_remote_data_source.dart';
 
 // Dashboard imports 
+import '../features/dashboard/domain/usecases/search_encounters.dart';
 import '../features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
 import '../features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import '../features/dashboard/data/repositories/dashboard_repository_impl.dart';
@@ -131,11 +132,12 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => CreateEncounter(sl()));
+  sl.registerLazySingleton(() => SearchEncounters(sl()));
 
   // BLoC Encounter
   // Usamos registerFactory para que se cree uno nuevo cada vez que entramos a la pantalla
   sl.registerFactory(
-    () => EncounterBloc(createEncounter: sl()),
+    () => EncounterBloc(createEncounter: sl(), searchEncounters: sl()),
   );
 
   //! Features - Restaurant (Venue)
