@@ -82,7 +82,7 @@ class _VenueSelectionViewState extends State<_VenueSelectionView> {
                     itemBuilder: (context, index) {
                       final venue = state.venues[index];
                       
-                      // USAMOS EL WIDGET EXTRAÍDO
+                      // WIDGET EXTRAÍDO
                       return VenueCard(
                         venue: venue,
                         onTap: () {
@@ -92,7 +92,7 @@ class _VenueSelectionViewState extends State<_VenueSelectionView> {
                             MaterialPageRoute(
                               builder: (_) => CreateEncounterScreen(
                                 learnerId: widget.learnerId,
-                                venueId: venue['id'], // O venue.id según tu modelo
+                                venueId: venue['venueId'], 
                               ),
                             ),
                           );
