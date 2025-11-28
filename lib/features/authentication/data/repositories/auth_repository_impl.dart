@@ -12,7 +12,6 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource authRemoteDataSource;
   final ProfileRemoteDataSource profileRemoteDataSource;
   final TokenStorage tokenStorage;
-  // (Aquí también inyectarías un NetworkInfo para chequear conexión)
 
   AuthRepositoryImpl({
     required this.authRemoteDataSource,
@@ -21,67 +20,73 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, User>> login(String username, String password) async {
+  Future<Either<Failure, User>> login(String email, String password) async {
     try {
-      final authResponse = await authRemoteDataSource.login(username, password);
+      // 1. Login básico (IAM)
+      final authResponse = await authRemoteDataSource.login(email, password);
       
+      // 2. Guardar token
       await tokenStorage.saveToken(authResponse.token);
 
+      // 3. Hidratar Perfil (Obtener datos de negocio: Learner/Partner IDs)
       try {
-        final profileModel = await profileRemoteDataSource.getProfileByEmail(
-          authResponse.username, 
-          authResponse.token);
-          return Right(profileModel); 
+        // Usa el token recién obtenido para cargar el perfil
+        final profileModel = await profileRemoteDataSource.getProfileByEmail(authResponse.username, authResponse.token);
+        
+        return Right(profileModel);
       } catch (e) {
-        print('Error fetching profile: $e');
+        // Si falla la carga del perfil, devolvemos un usuario básico para no bloquear el login
+        // (Aunque esto podría causar problemas de navegación si faltan IDs)
         return Right(User(
-          id: authResponse.id.toString(),
+          id: authResponse.id,
           username: authResponse.username,
-          name: 'User', // Placeholder
+          name: 'User',
+          email: authResponse.username,
+          firstName: 'User',
+          lastName: '',
+          userType: 'UNKNOWN',
         ));
       }
-  } on ServerException catch (e) {
+    } on ServerException {
       return Left(ServerFailure());
-  } catch (e) {
-    return Left(ServerFailure());
-  }
+    } catch (e) {
+      return Left(ServerFailure());
+    }
   }
 
   @override
-  Future<Either<Failure, User>> register(
-      String nombre, String apellido, String username, String password, String userType) async {
+  Future<Either<Failure, User>> register(String nombre, String apellido, String email, String password, String userType) async {
     try {
-      // 1. Crear usuario en IAM (Auth)
-      await authRemoteDataSource.register(username, password);
+      // 1. Crear usuario en IAM (Auth) - El backend espera username/password
+      await authRemoteDataSource.register(email, password);
 
       // 2. Mapear el tipo de usuario del Front ('learner'/'owner') al del Back ('LEARNER'/'PARTNER')
       final businessRole = userType == 'owner' ? 'PARTNER' : 'LEARNER';
 
-      // 3. Preparar datos para Profile
+      // 3. Preparar datos para crear el Profile completo
       final profileData = ProfileModel.registerToJson(
         firstName: nombre,
         lastName: apellido,
-        username: username,
-        businessRole: businessRole, // Enviamos el rol dinámico
+        username: email,
+        password: password, // Requerido por CreateCompleteProfileCommand del backend
+        businessRole: businessRole,
       );
 
-      // 4. Crear perfil
+      // 4. Crear perfil en el backend
       final profileModel = await profileRemoteDataSource.createProfile(profileData);
       
       return Right(profileModel);
 
+    } on ServerException {
+      return Left(ServerFailure());
     } catch (e) {
-      //TODO: Si falla aqui, tienes un usuario creado sin perfil.
-      // Deberías manejar la limpieza o el rollback.
       return Left(ServerFailure());
     }
   }
-// ...
 
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      // Implement logout logic here (clear tokens, etc.)
       await tokenStorage.deleteToken();
       return const Right(null);
     } catch (e) {

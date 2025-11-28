@@ -1,12 +1,19 @@
 class User  {
-  final String id;
+  final int id;
   final String username;
   final String name;
-  // Agrega otros campos necesarios que vengan del backend
+  final String email;
+  final String firstName;
+  final String lastName;
+  final String userType;
 
   const User({
     required this.id,
     required this.username,
     required this.name,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.userType,
   });
 }

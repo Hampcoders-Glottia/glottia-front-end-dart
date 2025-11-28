@@ -3,10 +3,12 @@ import 'package:mobile_frontend/const/backend_urls.dart';
 import 'package:mobile_frontend/core/network/token_storage.dart';
 import '../../../../core/error/exceptions.dart'; 
 import '../models/auth_response_model.dart';
+import '../models/profile_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AuthResponseModel> login(String username, String password);
   Future<void> register(String username, String password);
+  Future<ProfileModel> getProfileByUserId(int userId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -58,6 +60,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return;
     } on DioException catch (e) {
       throw ServerException('Failed to register: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ProfileModel> getProfileByUserId(int userId) async {
+    // Según backend: ProfilesController -> GET /api/v1/profiles/user/{userId}
+    final endpoint = '$baseUrl/profiles/user/$userId'; 
+    
+    try {
+      // El token ya debe estar en los headers gracias al AuthInterceptor que vi en tus archivos
+      final response = await dio.get(endpoint);
+      
+      if (response.statusCode == 200) {
+        return ProfileModel.fromJson(response.data);
+      } else {
+        throw ServerException('Perfil no encontrado');
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error al obtener perfil: ${e.message}');
     }
   }
 }

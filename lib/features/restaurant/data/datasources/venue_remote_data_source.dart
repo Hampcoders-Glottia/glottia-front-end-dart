@@ -63,4 +63,15 @@ class VenueRemoteDataSource {
       return [];
     }
   }
+
+  // 5. Método para obtener TODOS los locales disponibles
+  Future<List<dynamic>> getAllVenues() async {
+    try {
+      final response = await dio.get('$baseUrl/venues');
+      return response.data ?? [];
+    } catch (e) {
+      // Si hay error, retornamos lista vacía por ahora
+      return [];
+    }
+  }
 }

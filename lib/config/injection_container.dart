@@ -4,9 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_frontend/const/backend_urls.dart';
 import 'package:mobile_frontend/core/network/auth_interceptor.dart';
 import 'package:mobile_frontend/core/network/token_storage.dart';
-import 'package:mobile_frontend/features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
-import 'package:mobile_frontend/features/restaurant/data/datasources/venue_remote_data_source.dart';
-import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
 
 // Authentication imports
 import '../features/authentication/domain/repositories/auth_repository.dart';
@@ -18,6 +15,7 @@ import '../features/authentication/data/datasources/auth_remote_data_source.dart
 import '../features/authentication/data/datasources/profile_remote_data_source.dart';
 
 // Dashboard imports 
+import '../features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
 import '../features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import '../features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import '../features/dashboard/domain/repositories/dashboard_repository.dart';
@@ -32,39 +30,15 @@ import '../features/dashboard/data/repositories/encounter_repository_impl.dart';
 import '../features/dashboard/data/datasources/encounter_remote_data_source.dart';
 
 // Venue imports
-
+import '../features/restaurant/data/datasources/venue_remote_data_source.dart';
+import '../features/restaurant/presentation/bloc/venue/venue_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  //! Features - Authentication
+  //! External
+  sl.registerLazySingleton(() => http.Client());
   
-  // BLoC Auth
-  sl.registerFactory(
-    () => AuthBloc(
-      loginUser: sl(),
-      registerUser: sl(),
-    ),
-  );
-
-  // Casos de Uso Auth
-  sl.registerLazySingleton(() => LoginUser(sl()));
-  sl.registerLazySingleton(() => RegisterUser(sl()));
-
-  // Repositorio Auth
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      authRemoteDataSource: sl(),
-      profileRemoteDataSource: sl(),
-      tokenStorage: sl(),
-    ),
-  );
-
-  // Data Sources Auth
-  sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(dio: sl(), tokenStorage: sl()),
-  );
-
   // Register Token Storage
   sl.registerLazySingleton(() => TokenStorage());
   
@@ -87,15 +61,55 @@ Future<void> init() async {
     return dio;
   });
 
-  // ProfileRemoteDataSourceImpl ahora pide 'dio', no 'client'
+  //! Features - Authentication
+  
+  // Data Sources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(dio: sl(), tokenStorage: sl()),
+  );
+  
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(dio: sl()), 
   );
-  // -----------------------
+
+  // Repositories
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      authRemoteDataSource: sl(),
+      profileRemoteDataSource: sl(),
+      tokenStorage: sl(),
+    ),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => LoginUser(sl()));
+  sl.registerLazySingleton(() => RegisterUser(sl()));
+
+  // BLoC
+  sl.registerFactory(
+    () => AuthBloc(
+      loginUser: sl(),
+      registerUser: sl(),
+    ),
+  );
 
   //! Features - Dashboard
 
-  // BLoC Dashboard
+  // Data Sources
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(dio: sl()),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetLearnerStats(sl()));
+  sl.registerLazySingleton(() => GetUpcomingEncounters(sl()));
+
+  // BLoC
   sl.registerFactory(
     () => DashboardBloc(
       getLearnerStats: sl(),
@@ -103,52 +117,33 @@ Future<void> init() async {
     ), 
   );
 
-  // Casos de Uso Dashboard
-  sl.registerLazySingleton(() => GetLearnerStats(sl()));
-  sl.registerLazySingleton(() => GetUpcomingEncounters(sl()));
-
-  // Repositorio Dashboard
-  sl.registerLazySingleton<DashboardRepository>(
-    () => DashboardRepositoryImpl(remoteDataSource: sl()),
+  //! Features - Encounters (Reservas)
+  
+  // Data Source
+  sl.registerLazySingleton<EncounterRemoteDataSource>(
+    () => EncounterRemoteDataSourceImpl(dio: sl()),
   );
-
-  // Data Sources Dashboard
-  // NOTA: Si Dashboard sigue usando http, esto está bien. 
-  // Si también migraste Dashboard a Dio, cambia 'client' por 'dio' aquí también.
-  sl.registerLazySingleton<DashboardRemoteDataSource>(
-    () => DashboardRemoteDataSourceImpl(dio: sl()),
-  );
-
-  // ---------------------------------------
-  // ! Features - Encounters (Reservas)
-  // Use cases
-  sl.registerLazySingleton(() => CreateEncounter(sl()));
 
   // Repository 
   sl.registerLazySingleton<EncounterRepository>(
     () => EncounterRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Data Source
-  sl.registerLazySingleton<EncounterRemoteDataSource>(
-    () => EncounterRemoteDataSourceImpl(dio: sl()),
-  );
+  // Use cases
+  sl.registerLazySingleton(() => CreateEncounter(sl()));
 
   // BLoC Encounter
-  sl.registerLazySingleton(
+  // Usamos registerFactory para que se cree uno nuevo cada vez que entramos a la pantalla
+  sl.registerFactory(
     () => EncounterBloc(createEncounter: sl()),
   );
 
-  // ---------------------------------------
-  // Venue Feature 
+  //! Features - Restaurant (Venue)
+  
+  // Data Source
   sl.registerLazySingleton(() => VenueRemoteDataSource(dio: sl()));
+  
+  // BLoC Venue
+  // Usamos registerFactory para que no guarde estado entre pantallas (Owner vs Selection)
   sl.registerFactory(() => VenueBloc(venueRemoteDataSource: sl()));
-
-  //! Core
-  // sl.registerLazySingleton<NetworkInfo>(
-  //  () => NetworkInfoImpl(sl()),
-  // );
-
-  //! External
-  sl.registerLazySingleton(() => http.Client());
 }

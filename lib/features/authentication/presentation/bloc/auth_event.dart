@@ -23,12 +23,18 @@ class RegisterRequested extends AuthEvent {
   final String email;
   final String password;
   final String userType; 
-    // Direccion fields
+  // Direccion fields - learner
   final String? street;
   final String? number;
   final String? city;
   final String? postalCode;
   final String? country;
+  // Direccion fields - partner
+  final String? businessName;
+  final String? legalName;
+  final String? taxId;
+  final String? contactPhone;
+  final String? description;
 
   const RegisterRequested({
     required this.nombre,
@@ -36,15 +42,22 @@ class RegisterRequested extends AuthEvent {
     required this.email,
     required this.password,
     required this.userType,
+    // Learner fields
     this.street,
     this.number,
     this.city,
     this.postalCode,
     this.country,
+    // Partner fields
+    this.businessName,
+    this.legalName,
+    this.taxId,
+    this.contactPhone,
+    this.description,
   });
 
   @override
-  List<Object?> get props => [nombre, apellido, email, password, userType, street, number, city, postalCode, country];
+  List<Object?> get props => [nombre, apellido, email, password, userType, street, number, city, postalCode, country, businessName, legalName, taxId, contactPhone, description];
 }
 
 class LanguageSelected extends AuthEvent {

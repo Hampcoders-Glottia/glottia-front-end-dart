@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
+import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_event.dart';
 
 import '../bloc/venue/venue_bloc.dart';
 import 'create_venue_screen.dart';
@@ -33,11 +35,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Refresh Button
           IconButton(
             icon: const Icon(Icons.refresh, color: kPrimaryBlue),
             onPressed: () =>
                 context.read<VenueBloc>().add(LoadPartnerVenues(widget.partnerId)),
-          )
+          ),
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent), 
+            onPressed: () {
+              context.read<AuthBloc>().add(LogoutRequested());
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+            },
+            ),
+            const SizedBox(width: 8),
         ],
       ),
       body: BlocBuilder<VenueBloc, VenueState>(

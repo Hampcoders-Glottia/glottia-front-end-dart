@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
+import 'package:mobile_frontend/features/authentication/data/models/profile_model.dart'; // Importante para verificar el rol
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -70,9 +71,28 @@ class _LoginScreenState extends State<LoginScreen> {
             }
 
             if (state is AuthSuccess) {
-              // Redirigimos a la selección de idioma en lugar del Dashboard directo
-              Navigator.of(context).pushReplacementNamed('/language_selection');
+              // LÓGICA DE REDIRECCIÓN POR ROL
+              final user = state.user;
+
+              if (user is ProfileModel) {
+                if(user.userType == 'PARTNER') {
+                  Navigator.of(context).pushReplacementNamed(
+                    '/owner_dashboard', 
+                    arguments: user.partnerId ?? user.userId);
+                } else {
+                  Navigator.of(context).pushReplacementNamed(
+                    '/home', 
+                    arguments: user.learnerId ?? user.userId);
+                }
+              } else {
+              // Fallback si por alguna razón no es ProfileModel (ej. error de casting)
+              // Aquí podrías mostrar un error o navegar con el ID genérico
+              Navigator.of(context).pushReplacementNamed(
+                '/home', 
+                arguments: int.tryParse(user.id.toString()) ?? 0,
+                );
             }
+            } 
           },
           builder: (context, state) {
             final isLoading = state is AuthLoading;

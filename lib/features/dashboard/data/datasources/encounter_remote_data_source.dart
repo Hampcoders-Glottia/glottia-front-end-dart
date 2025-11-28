@@ -17,20 +17,18 @@ class EncounterRemoteDataSourceImpl implements EncounterRemoteDataSource {
     final endpoint = '$baseUrl/encounters';
 
     try {
-      // TODO: Para producción, deberíamos obtener el ID real del usuario logueado.
-      // Por ahora, usamos 1 (que suele ser el learner creado por defecto o en tus pruebas)
-      // para asegurar que el backend no rechace la petición.
-      const int hardcodedCreatorId = 1; 
-
+      // CORRECCIÓN: Usamos el creatorId que viene en los parámetros (ID real)
+      // El venueId también debe ser real (vendrá de una selección previa o lo dejaremos como 1 si solo hay un local de prueba)
+      
       final response = await dio.post(
         endpoint,
         data: {
-          "creatorId": hardcodedCreatorId,
+          "creatorId": params.creatorId, // <--- ID REAL
           "venueId": params.venueId,
           "topic": params.topic,
-          "language": params.language,   // Ej: "ENGLISH" (Debe coincidir con el Enum del backend)
-          "cefrLevel": params.level,     // Ej: "B1" (Debe coincidir con el Enum del backend)
-          "scheduledAt": params.scheduledAt.toIso8601String(), // Formato ISO-8601
+          "language": params.language,
+          "cefrLevel": params.level,
+          "scheduledAt": params.scheduledAt.toIso8601String(),
         },
       );
 
@@ -39,7 +37,7 @@ class EncounterRemoteDataSourceImpl implements EncounterRemoteDataSource {
       } else {
         throw ServerException();
       }
-    } on DioException catch (e) {
+    } on DioException {
       // Puedes inspeccionar e.response para ver errores específicos del backend
       throw ServerException();
     }

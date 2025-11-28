@@ -41,3 +41,5 @@ class CreateVenuePressed extends VenueEvent {
   @override
   List<Object> get props => [name, street, city, partnerId];
 }
+
+class LoadAllVenues extends VenueEvent {}
