@@ -76,7 +76,7 @@ class VenueSelectionScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => CreateEncounterScreen(
                               learnerId: learnerId,
-                              venueId: venue['id'], // PASAMOS EL ID REAL DEL LOCAL
+                              venueId: venue['venueId'], // PASAMOS EL ID REAL DEL LOCAL
                             ),
                           ),
                         );
