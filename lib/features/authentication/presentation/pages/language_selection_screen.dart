@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/data/models/language.dart';
 import 'package:mobile_frontend/features/authentication/presentation/widgets/languague_option_card.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_navigation_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
-  const LanguageSelectionScreen({super.key});
+  final int learnerId;
+  const LanguageSelectionScreen({super.key, required this.learnerId});
 
   @override
   State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
@@ -34,10 +36,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     // TODO: Aquí podrías disparar un evento para guardar el idioma en el backend
     // context.read<ProfileBloc>().add(UpdateLanguage(selectedLanguageCode!));
 
-    // == CAMBIO CRÍTICO ==
-    // Usamos la ruta '/home' porque en main.dart es donde se inyecta el DashboardBloc.
-    // Si usas MaterialPageRoute directo, el Dashboard fallará.
-    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => LearnerNavigationScreen(learnerId: widget.learnerId),
+      ), 
+      (route) => false
+      );
   }
 
   @override

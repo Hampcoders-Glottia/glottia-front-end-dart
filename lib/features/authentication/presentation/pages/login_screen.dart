@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/data/models/profile_model.dart'; // Importante para verificar el rol
+import 'package:mobile_frontend/features/authentication/presentation/pages/language_selection_screen.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -80,17 +81,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     '/owner_dashboard', 
                     arguments: user.partnerId ?? user.userId);
                 } else {
-                  Navigator.of(context).pushReplacementNamed(
-                    '/home', 
-                    arguments: user.learnerId ?? user.userId);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => LanguageSelectionScreen(
+                        learnerId: user.userId ?? user.id,
+                      )
+                    ),  
+                  );
                 }
               } else {
               // Fallback si por alguna razón no es ProfileModel (ej. error de casting)
               // Aquí podrías mostrar un error o navegar con el ID genérico
-              Navigator.of(context).pushReplacementNamed(
-                '/home', 
-                arguments: int.tryParse(user.id.toString()) ?? 0,
-                );
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => LanguageSelectionScreen(
+                    learnerId: int.tryParse(user.id.toString()) ?? 0,
+                  ),
+                ),
+              );
             }
             } 
           },

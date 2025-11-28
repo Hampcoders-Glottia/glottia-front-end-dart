@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mobile_frontend/features/dashboard/domain/usecases/search_encounters.dart';
+import '../../../domain/entities/encounter.dart';
 import '../../../domain/entities/encounter_creation_params.dart';
 import '../../../domain/usecases/create_encounter.dart';
 
@@ -9,9 +11,32 @@ part 'encounter_state.dart';
 
 class EncounterBloc extends Bloc<EncounterEvent, EncounterState> {
   final CreateEncounter createEncounter;
+  final SearchEncounters searchEncounters;
 
-  EncounterBloc({required this.createEncounter}) : super(EncounterInitial()) {
+  EncounterBloc({required this.createEncounter, required this.searchEncounters}) : super(EncounterInitial()) {
+    // Handle to create
     on<CreateEncounterPressed>(_onCreateEncounter);
+
+    // Handle to search
+    on<SearchEncountersRequested>(_onSearchEncounters);
+  }
+
+  Future<void> _onSearchEncounters(
+    SearchEncountersRequested event,
+    Emitter<EncounterState> emit,
+  ) async {
+    emit(EncounterLoading());
+
+    final result = await searchEncounters(SearchEncountersParams(
+      date: event.date,
+      languageId: event.languageId,
+      // location: ... (puedes agregar más filtros si quieres)
+    ));
+
+    result.fold(
+      (failure) => emit(const EncounterFailure("Error al buscar encuentros")),
+      (encounters) => emit(EncounterSearchSuccess(encounters)),
+    );
   }
 
   Future<void> _onCreateEncounter(
