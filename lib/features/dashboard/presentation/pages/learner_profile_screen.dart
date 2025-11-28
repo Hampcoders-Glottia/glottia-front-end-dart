@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../authentication/presentation/bloc/auth_bloc.dart';
+import '../../../authentication/presentation/bloc/auth_event.dart';
 
 class LearnerProfileScreen extends StatelessWidget {
   final int learnerId;
@@ -44,7 +47,8 @@ class LearnerProfileScreen extends StatelessWidget {
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text("Cerrar Sesión", style: TextStyle(color: Colors.red)),
                 onTap: () {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  context.read<AuthBloc>().add(LogoutRequested());
+                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                 },
               )
             ],
