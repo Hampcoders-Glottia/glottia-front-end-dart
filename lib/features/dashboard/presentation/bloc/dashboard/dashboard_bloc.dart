@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../core/usecases/usecase.dart';
 import '../../../domain/usecases/get_learner_stats.dart';
 import '../../../domain/usecases/get_upcoming_encounters.dart';
 import 'dashboard_event.dart';
@@ -24,8 +23,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     // Ejecutamos ambas peticiones en paralelo para optimizar tiempo
     final results = await Future.wait([
-      getLearnerStats(NoParams()),
-      getUpcomingEncounters(NoParams()),
+      getLearnerStats(event.learnerId),
+      getUpcomingEncounters(event.learnerId),
     ]);
 
     // Resultados individuales (son de tipo Either)
