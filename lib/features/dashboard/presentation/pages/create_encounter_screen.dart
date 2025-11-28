@@ -157,8 +157,30 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
                           icon: Icons.access_time,
                           value: _selectedTime.format(context),
                           onTap: () async {
-                            final time = await showTimePicker(context: context, initialTime: _selectedTime);
-                            if (time != null) setState(() => _selectedTime = time);
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: _selectedTime,
+                              helpText: "SELECCIONA UNA HORA PAR (8:00, 10:00...)"
+                            );
+                            if (time != null) {
+                              int validHour = time.hour;
+                              if(validHour % 2 != 0) validHour -= 1;
+
+                              if (validHour < 8) validHour = 8;
+                              if (validHour > 22) validHour = 22;
+
+                              setState(() => _selectedTime = TimeOfDay(hour: validHour, minute: 0));
+
+                              if (time.hour != validHour || time.minute != 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Hora ajustada a las $validHour: 00 para coincidir los turnos del local."),
+                                    duration: const Duration(seconds: 2),
+                                    backgroundColor: Colors.orange,
+                                  )
+                                );
+                              }
+                            }
                           },
                         ),
                       ),
