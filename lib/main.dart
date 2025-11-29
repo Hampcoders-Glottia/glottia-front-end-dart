@@ -4,7 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 // BLoCs
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
-import 'package:mobile_frontend/features/restaurant/presentation/bloc/venue/venue_bloc.dart';
+import 'package:mobile_frontend/features/venue/presentation/bloc/venue/venue_bloc.dart';
 
 // Pages
 // Authentication pages
@@ -17,7 +17,7 @@ import 'package:mobile_frontend/features/authentication/presentation/pages/welco
 import 'package:mobile_frontend/features/dashboard/presentation/pages/learner_navigation_screen.dart';
 
 // Restaurant pages
-import 'package:mobile_frontend/features/restaurant/presentation/pages/owner_dashboard_screen.dart'; 
+import 'package:mobile_frontend/features/venue/presentation/pages/owner_dashboard_screen.dart'; 
 
 import 'package:mobile_frontend/config/injection_container.dart' as di;
 

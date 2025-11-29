@@ -92,7 +92,7 @@ class _VenueSelectionViewState extends State<_VenueSelectionView> {
                             MaterialPageRoute(
                               builder: (_) => CreateEncounterScreen(
                                 learnerId: widget.learnerId,
-                                venueId: venue['venueId'], 
+                                venue: venue, 
                               ),
                             ),
                           );
