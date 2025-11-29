@@ -112,7 +112,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       Navigator.push(
                         context, 
                         MaterialPageRoute(
-                          builder: (_) => PromotionsListScreen(venueId: venueReg['venueId'])
+                          builder: (_) => PromotionsListScreen(venueId: venueReg['venueId'], partnerId: widget.partnerId)
                         )
                     );
                     },

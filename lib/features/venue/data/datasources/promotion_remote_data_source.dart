@@ -8,7 +8,7 @@ import '../../domain/entities/promotion.dart';
 
 abstract class PromotionRemoteDataSource {
   Future<List<PromotionModel>> getPromotionsByVenue(int venueId);
-  Future<bool> createPromotion(int venueId, Promotion promotion);
+  Future<bool> createPromotion(int venueId, Promotion promotion, int partnerId);
 }
 
 class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
@@ -41,27 +41,54 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
   }
 
   @override
-  Future<bool> createPromotion(int venueId, Promotion promotion) async {
+  Future<bool> createPromotion(int venueId, Promotion promotion, int partnerId) async {
     final token = await tokenStorage.getToken();
-    final url = Uri.parse('$baseUrl/promotions'); // Endpoint de creación global o anidado
+    final urlCreate = Uri.parse('$baseUrl/promotions'); // Endpoint de creación global o anidado
     
-    final body = json.encode({
-      ... (promotion as PromotionModel).toJson(),
-      'venueId': venueId, // Enviamos el venueId en el body o en la URL según tu backend
+    final bodyCreate = json.encode({
+      'name': promotion.name,
+      'description': promotion.description,
+      'validFrom': promotion.startDate.toIso8601String(), 
+      'validUntil': promotion.endDate.toIso8601String(),
+      'value': promotion.discountPercentage,
+      'promotionType': "DISCOUNT_PERCENT", 
+      'partnerId': partnerId,
     });
 
-    final response = await client.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: body,
+    final responseCreate = await client.post(
+      urlCreate,
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: bodyCreate,
     );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
+    if (responseCreate.statusCode != 201) {
+        // Log para depuración
+        print("Error creando promo: ${responseCreate.body}");
+        throw ServerException();
+    }
+    
+    final promoId = json.decode(responseCreate.body)['id'];
+
+    // 2. Asignarla al Venue
+    final urlAssign = Uri.parse('$baseUrl/venues/$venueId/promotions');
+    
+    final bodyAssign = json.encode({
+      'promotionId': promoId,
+      'validFrom': promotion.startDate.toIso8601String(),
+      'validUntil': promotion.endDate.toIso8601String(),
+      'maxRedemptions': 100
+    });
+
+    final responseAssign = await client.post(
+      urlAssign,
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: bodyAssign,
+    );
+
+    if (responseAssign.statusCode == 201) {
       return true;
     } else {
+      print("Error asignando promo: ${responseAssign.body}");
       throw ServerException();
     }
   }

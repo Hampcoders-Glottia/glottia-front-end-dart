@@ -23,22 +23,13 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
       );
     });
 
-    on<CreatePromotionSubmitted>((event, emit) async {
+    on<CreatePromotionRequested>((event, emit) async {
       emit(PromotionLoading());
-      
-      final newPromo = Promotion(
-        id: 0, // El backend genera el ID
-        name: event.name,
-        description: event.description,
-        discountPercentage: event.discount,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        promotionTypeId: 1, // Hardcoded por ahora o añadir selector
-      );
 
       final result = await createPromotion(CreatePromotionParams(
         venueId: event.venueId, 
-        promotion: newPromo
+        promotion: event.promotion, 
+        partnerId: event.partnerId 
       ));
 
       result.fold(

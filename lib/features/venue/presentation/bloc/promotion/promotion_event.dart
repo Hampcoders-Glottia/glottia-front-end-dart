@@ -28,3 +28,13 @@ class CreatePromotionSubmitted extends PromotionEvent {
     required this.endDate,
   });
 }
+
+class CreatePromotionRequested extends PromotionEvent {
+  final int venueId;
+  final Promotion promotion;
+  final int partnerId; 
+  const CreatePromotionRequested(this.venueId, this.promotion, this.partnerId);
+  
+  @override
+  List<Object> get props => [venueId, promotion, partnerId];
+}

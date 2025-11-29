@@ -12,16 +12,17 @@ class CreatePromotion implements UseCase<bool, CreatePromotionParams> {
 
   @override
   Future<Either<Failure, bool>> call(CreatePromotionParams params) async {
-    return await repository.createPromotion(params.venueId, params.promotion);
+    return await repository.createPromotion(params.venueId, params.promotion, params.partnerId);
   }
 }
 
 class CreatePromotionParams extends Equatable {
   final int venueId;
   final Promotion promotion;
+  final int partnerId;
 
-  const CreatePromotionParams({required this.venueId, required this.promotion});
+  const CreatePromotionParams({required this.venueId, required this.promotion, required this.partnerId});
 
   @override
-  List<Object?> get props => [venueId, promotion];
+  List<Object?> get props => [venueId, promotion, partnerId];
 }

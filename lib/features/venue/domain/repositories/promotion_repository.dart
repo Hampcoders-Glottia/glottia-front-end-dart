@@ -4,5 +4,5 @@ import '../entities/promotion.dart';
 
 abstract class PromotionRepository {
   Future<Either<Failure, List<Promotion>>> getPromotionsByVenue(int venueId);
-  Future<Either<Failure, bool>> createPromotion(int venueId, Promotion promotion);
+  Future<Either<Failure, bool>> createPromotion(int venueId, Promotion promotion, int partnerId);
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
+import '../../domain/entities/promotion.dart';
 import '../bloc/promotion/promotion_bloc.dart';
 
 class CreatePromotionScreen extends StatefulWidget {
   final int venueId;
-  const CreatePromotionScreen({super.key, required this.venueId});
+  final int partnerId;
+
+  const CreatePromotionScreen({super.key, required this.venueId, required this.partnerId});
 
   @override
   State<CreatePromotionScreen> createState() => _CreatePromotionScreenState();
@@ -22,14 +25,23 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      context.read<PromotionBloc>().add(CreatePromotionSubmitted(
-        venueId: widget.venueId,
-        name: _nameCtrl.text,
-        description: _descCtrl.text,
-        discount: double.parse(_discountCtrl.text),
-        startDate: _startDate,
-        endDate: _endDate,
-      ));
+      final discount = double.tryParse(_discountCtrl.text) ?? 0;
+      
+      context.read<PromotionBloc>().add(
+        CreatePromotionRequested(
+          widget.venueId,
+          Promotion(
+            id: 0, 
+            name: _nameCtrl.text,
+            description: _descCtrl.text,
+            discountPercentage: discount,
+            startDate: _startDate,
+            endDate: _endDate,
+            promotionTypeId: 1 
+          ),
+          widget.partnerId, 
+        )
+      );
     }
   }
 

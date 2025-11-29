@@ -21,9 +21,9 @@ class PromotionRepositoryImpl implements PromotionRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> createPromotion(int venueId, Promotion promotion) async {
+  Future<Either<Failure, bool>> createPromotion(int venueId, Promotion promotion, int partnerId) async {
     try {
-      final result = await remoteDataSource.createPromotion(venueId, promotion);
+      final result = await remoteDataSource.createPromotion(venueId, promotion, partnerId);
       return Right(result);
     } on ServerException {
       return Left(ServerFailure());
