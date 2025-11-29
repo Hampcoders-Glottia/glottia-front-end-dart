@@ -16,7 +16,8 @@ class NewReservationBloc
 
   NewReservationBloc({
     required this.createReservation,
-  }) : super(const NewReservationState()) {
+    required int venueId,
+  }) : super(NewReservationState(venueId: venueId)) {
     
     on<NameChanged>(_onNameChanged);
     on<PhoneChanged>(_onPhoneChanged);
@@ -70,6 +71,7 @@ class NewReservationBloc
     emit(state.copyWith(status: FormStatus.loading));
 
     final params = ReservationParams(
+      venueId: state.venueId,
       name: state.name,
       phone: state.phone,
       email: state.email,

@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 class ReservationParams extends Equatable {
+  final int venueId;
   final String name;
   final String phone;
   final String email;
@@ -12,6 +13,7 @@ class ReservationParams extends Equatable {
   // ya que el backend no los soporta, pero podrían añadirse)
 
   const ReservationParams({
+    required this.venueId,
     required this.name,
     required this.phone,
     required this.email,
@@ -21,5 +23,5 @@ class ReservationParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [name, phone, email, guestCount, date, time];
+  List<Object?> get props => [venueId, name, phone, email, guestCount, date, time];
 }

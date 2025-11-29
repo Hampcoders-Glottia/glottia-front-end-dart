@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import '../bloc/venue/venue_bloc.dart';
+import '../widgets/input_decoration.dart';
 
 class CreateVenueScreen extends StatefulWidget {
   final int partnerId;
@@ -109,7 +110,7 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
                   // Nombre del Local
                   TextFormField(
                     controller: _nameController,
-                    decoration: _inputDecoration("Nombre del Local", Icons.store),
+                    decoration: buildInputDecoration("Nombre del Local", Icons.store),
                     textInputAction: TextInputAction.next,
                     validator: (v) => v!.isEmpty ? "El nombre es obligatorio" : null,
                   ),
@@ -118,7 +119,7 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
                   // Tipo de Local (Dropdown)
                   DropdownButtonFormField<int>(
                     value: _selectedTypeId,
-                    decoration: _inputDecoration("Tipo de Negocio", Icons.category),
+                    decoration: buildInputDecoration("Tipo de Negocio", Icons.category),
                     items: const [
                       DropdownMenuItem(value: 1, child: Text("Coworking Space")),
                       DropdownMenuItem(value: 2, child: Text("Restaurante")),
@@ -137,7 +138,7 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
                   // Dirección
                   TextFormField(
                     controller: _streetController,
-                    decoration: _inputDecoration("Calle y Número", Icons.location_on),
+                    decoration: buildInputDecoration("Calle y Número", Icons.location_on),
                     textInputAction: TextInputAction.next,
                     validator: (v) => v!.isEmpty ? "La dirección es obligatoria" : null,
                   ),
@@ -149,7 +150,7 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _cityController,
-                          decoration: _inputDecoration("Ciudad", Icons.location_city),
+                          decoration: buildInputDecoration("Ciudad", Icons.location_city),
                           textInputAction: TextInputAction.next,
                           validator: (v) => v!.isEmpty ? "Requerido" : null,
                         ),
@@ -158,7 +159,7 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _countryController,
-                          decoration: _inputDecoration("País", Icons.public),
+                          decoration: buildInputDecoration("País", Icons.public),
                           textInputAction: TextInputAction.done,
                           validator: (v) => v!.isEmpty ? "Requerido" : null,
                         ),
@@ -199,25 +200,5 @@ class _CreateVenueScreenState extends State<CreateVenueScreen> {
     );
   }
 
-  // Helper para estilos consistentes
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: Colors.grey),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.grey),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kPrimaryBlue, width: 2),
-      ),
-      filled: true,
-      fillColor: Colors.grey.shade50,
-    );
-  }
+  
 }

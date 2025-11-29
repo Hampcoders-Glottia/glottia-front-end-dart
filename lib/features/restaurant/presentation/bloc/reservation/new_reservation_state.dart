@@ -3,6 +3,7 @@ part of 'new_reservation_bloc.dart';
 enum FormStatus { initial, loading, success, failure }
 
 class NewReservationState extends Equatable {
+  final int venueId; 
   final String name;
   final String phone;
   final String email;
@@ -15,6 +16,7 @@ class NewReservationState extends Equatable {
   final String? errorMessage;
 
   const NewReservationState({
+    required this.venueId,
     this.name = '',
     this.phone = '',
     this.email = '',
@@ -28,6 +30,7 @@ class NewReservationState extends Equatable {
   });
 
   NewReservationState copyWith({
+    int? venueId,
     String? name,
     String? phone,
     String? email,
@@ -40,6 +43,7 @@ class NewReservationState extends Equatable {
     String? errorMessage,
   }) {
     return NewReservationState(
+      venueId: venueId ?? this.venueId,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       email: email ?? this.email,
