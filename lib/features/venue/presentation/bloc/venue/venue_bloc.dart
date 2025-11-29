@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:mobile_frontend/features/restaurant/data/datasources/venue_remote_data_source.dart'; 
+import 'package:mobile_frontend/features/venue/data/datasources/venue_remote_data_source.dart'; 
 
 part 'venue_event.dart';
 part 'venue_state.dart';

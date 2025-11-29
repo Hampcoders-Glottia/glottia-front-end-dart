@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/injection_container.dart';
 import '../bloc/encounter/encounter_bloc.dart';
 import '../../domain/entities/encounter.dart';
-import '../../../restaurant/presentation/pages/venue_selection_screen.dart';
+import '../../../venue/presentation/pages/venue_selection_screen.dart';
 
 class LearnerHomeScreen extends StatelessWidget {
   final int learnerId;
