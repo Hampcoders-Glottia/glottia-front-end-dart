@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_event.dart';
-import '../../../restaurant/presentation/pages/venue_selection_screen.dart';
+import '../../../venue/presentation/pages/venue_selection_screen.dart';
 import '../../domain/entities/encounter.dart';
 import '../../domain/entities/loyalty_stats.dart';
 import '../bloc/dashboard/dashboard_bloc.dart';

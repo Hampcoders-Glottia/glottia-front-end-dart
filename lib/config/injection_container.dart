@@ -31,8 +31,8 @@ import '../features/dashboard/data/repositories/encounter_repository_impl.dart';
 import '../features/dashboard/data/datasources/encounter_remote_data_source.dart';
 
 // Venue imports
-import '../features/restaurant/data/datasources/venue_remote_data_source.dart';
-import '../features/restaurant/presentation/bloc/venue/venue_bloc.dart';
+import '../features/venue/data/datasources/venue_remote_data_source.dart';
+import '../features/venue/presentation/bloc/venue/venue_bloc.dart';
 
 final sl = GetIt.instance;
 
