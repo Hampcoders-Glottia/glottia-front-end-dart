@@ -47,6 +47,8 @@ dependencies:
   dio: ^5.3.0
   # For secure storage
   flutter_secure_storage: ^9.0.0
+  # For charts and graphs
+  fl_chart: ^1.1.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
