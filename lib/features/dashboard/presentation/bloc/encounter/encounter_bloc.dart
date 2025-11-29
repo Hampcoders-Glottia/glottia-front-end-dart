@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mobile_frontend/features/dashboard/domain/usecases/get_upcoming_encounters.dart';
 import 'package:mobile_frontend/features/dashboard/domain/usecases/search_encounters.dart';
 import '../../../domain/entities/encounter.dart';
 import '../../../domain/entities/encounter_creation_params.dart';
@@ -12,13 +13,17 @@ part 'encounter_state.dart';
 class EncounterBloc extends Bloc<EncounterEvent, EncounterState> {
   final CreateEncounter createEncounter;
   final SearchEncounters searchEncounters;
+  final GetUpcomingEncounters getUpcomingEncounters;
 
-  EncounterBloc({required this.createEncounter, required this.searchEncounters}) : super(EncounterInitial()) {
+  EncounterBloc({required this.createEncounter, required this.searchEncounters, required this.getUpcomingEncounters}) : super(EncounterInitial()) {
     // Handle to create
     on<CreateEncounterPressed>(_onCreateEncounter);
 
     // Handle to search
     on<SearchEncountersRequested>(_onSearchEncounters);
+
+    // Handle to load my reservations
+    on<LoadMyReservations>(_onLoadMyReservations);
   }
 
   Future<void> _onSearchEncounters(
@@ -71,6 +76,20 @@ class EncounterBloc extends Bloc<EncounterEvent, EncounterState> {
     result.fold(
       (failure) => emit(const EncounterFailure("Error al crear la reserva")),
       (success) => emit(EncounterSuccess()),
+    );
+  }
+
+  Future<void> _onLoadMyReservations(
+    LoadMyReservations event,
+    Emitter<EncounterState> emit,
+  ) async {
+    emit(EncounterLoading());
+  
+    final result = await getUpcomingEncounters(event.learnerId); 
+    
+    result.fold(
+      (failure) => emit(EncounterFailure("Error al cargar mis reservas")),
+      (encounters) => emit(MyReservationsLoaded(encounters)),
     );
   }
 }

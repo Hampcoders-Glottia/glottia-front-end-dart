@@ -36,3 +36,10 @@ class SearchEncountersRequested extends EncounterEvent {
   @override
   List<Object> get props => [date ?? '', languageId ?? 0];
 }
+
+class LoadMyReservations extends EncounterEvent {
+  final int learnerId;
+  const LoadMyReservations(this.learnerId);
+  @override
+  List<Object> get props => [learnerId];
+}

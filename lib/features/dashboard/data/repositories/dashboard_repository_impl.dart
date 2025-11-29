@@ -25,9 +25,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, List<Encounter>>> getUpcomingEncounters() async {
+  Future<Either<Failure, List<Encounter>>> getUpcomingEncounters(int learnerId) async {
     try {
-      final result = await remoteDataSource.getUpcomingEncounters();
+      final result = await remoteDataSource.getUpcomingEncounters(learnerId);
       return Right(result);
     } on ServerFailure {
       return Left(ServerFailure());

@@ -5,7 +5,7 @@ import '../models/encounter_model.dart';
 
 abstract class DashboardRemoteDataSource {
   Future<LoyaltyStatsModel> getLoyaltyStats();
-  Future<List<EncounterModel>> getUpcomingEncounters();
+  Future<List<EncounterModel>> getUpcomingEncounters(int learnerId);
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -35,25 +35,13 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     }
   }
 
-  @override
-  Future<List<EncounterModel>> getUpcomingEncounters() async {
-    const endpoint = '$baseUrl/encounters/search';
-    
-    // Fecha actual para filtrar encuentros futuros
-    final now = DateTime.now().toIso8601String().split('T')[0]; 
+@override
+  Future<List<EncounterModel>> getUpcomingEncounters(int learnerId) async {
+    // Usamos un endpoint específico para las reservas de ESTE alumno
+    final endpoint = '$baseUrl/encounters/learner/$learnerId/upcoming'; 
 
     try {
-      final response = await dio.get(
-        endpoint,
-        queryParameters: {
-          'date': now,
-          'location': 'Lima', // Valor por defecto requerido por el backend
-          'languageId': 1,    // 1 = Inglés (Default)
-          'cefrLevelId': 1,   // 1 = A1 (Default)
-          'page': 0,
-          'size': 10,
-        },
-      );
+      final response = await dio.get(endpoint);
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = response.data;
@@ -62,7 +50,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         return [];
       }
     } catch (e) {
-      print("⚠️ Error obteniendo encuentros (usando lista vacía): $e");
+      print("⚠️ Error obteniendo reservas: $e");
       return [];
     }
   }
