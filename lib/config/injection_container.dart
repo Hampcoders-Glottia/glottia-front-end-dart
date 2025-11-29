@@ -31,7 +31,13 @@ import '../features/dashboard/data/repositories/encounter_repository_impl.dart';
 import '../features/dashboard/data/datasources/encounter_remote_data_source.dart';
 
 // Venue imports
+import '../features/venue/data/datasources/promotion_remote_data_source.dart';
 import '../features/venue/data/datasources/venue_remote_data_source.dart';
+import '../features/venue/data/repositories/promotion_repository_impl.dart';
+import '../features/venue/domain/repositories/promotion_repository.dart';
+import '../features/venue/domain/usecases/create_promotion.dart';
+import '../features/venue/domain/usecases/get_venue_promotions.dart';
+import '../features/venue/presentation/bloc/promotion/promotion_bloc.dart';
 import '../features/venue/presentation/bloc/venue/venue_bloc.dart';
 
 final sl = GetIt.instance;
@@ -148,4 +154,11 @@ Future<void> init() async {
   // BLoC Venue
   // Usamos registerFactory para que no guarde estado entre pantallas (Owner vs Selection)
   sl.registerFactory(() => VenueBloc(venueRemoteDataSource: sl()));
+
+  // Features - Promotions
+  sl.registerFactory(() => PromotionBloc(getVenuePromotions: sl(), createPromotion: sl()));
+  sl.registerLazySingleton(() => GetVenuePromotions(sl()));
+  sl.registerLazySingleton(() => CreatePromotion(sl()));
+  sl.registerLazySingleton<PromotionRepository>(() => PromotionRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<PromotionRemoteDataSource>(() => PromotionRemoteDataSourceImpl(client: sl(), tokenStorage: sl()));
 }

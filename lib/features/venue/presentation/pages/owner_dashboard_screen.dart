@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_event.dart';
+import 'package:mobile_frontend/features/venue/presentation/pages/promotions_list_screen.dart';
 
 import '../bloc/venue/venue_bloc.dart';
 import 'create_venue_screen.dart';
@@ -108,8 +109,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                     onTap: () {
-                      // TODO: Aquí navegaremos al 'Dashboard Detallado' (Figma) del local específico
-                      // Navigator.push(...);
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(
+                          builder: (_) => PromotionsListScreen(venueId: venueReg['venueId'])
+                        )
+                    );
                     },
                   ),
                 );
