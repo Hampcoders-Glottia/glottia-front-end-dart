@@ -137,7 +137,7 @@ Future<void> init() async {
   // BLoC Encounter
   // Usamos registerFactory para que se cree uno nuevo cada vez que entramos a la pantalla
   sl.registerFactory(
-    () => EncounterBloc(createEncounter: sl(), searchEncounters: sl()),
+    () => EncounterBloc(createEncounter: sl(), searchEncounters: sl(), getUpcomingEncounters: sl()),
   );
 
   //! Features - Restaurant (Venue)

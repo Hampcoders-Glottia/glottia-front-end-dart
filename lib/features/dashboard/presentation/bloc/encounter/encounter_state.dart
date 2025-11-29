@@ -28,3 +28,10 @@ class EncounterSearchSuccess extends EncounterState {
 
 // Estado de éxito para creación (para diferenciarlo)
 class EncounterCreationSuccess extends EncounterState {}
+
+class MyReservationsLoaded extends EncounterState {
+  final List<Encounter> encounters;
+  const MyReservationsLoaded(this.encounters);
+  @override
+  List<Object> get props => [encounters];
+}

@@ -11,6 +11,6 @@ class GetUpcomingEncounters implements UseCase<List<Encounter>, int> {
 
   @override
   Future<Either<Failure, List<Encounter>>> call(int learnerId) async {
-    return await repository.getUpcomingEncounters();
+    return await repository.getUpcomingEncounters(learnerId);
   }
 }
