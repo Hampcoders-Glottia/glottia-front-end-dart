@@ -1,57 +1,68 @@
-import 'package:dio/dio.dart';
-import 'package:mobile_frontend/const/backend_urls.dart';
-import '../models/loyalty_stats_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../const/backend_urls.dart'; 
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/network/token_storage.dart'; // Para obtener el token
 import '../models/encounter_model.dart';
+import '../models/loyalty_stats_model.dart';
 
 abstract class DashboardRemoteDataSource {
-  Future<LoyaltyStatsModel> getLoyaltyStats();
+  Future<LoyaltyStatsModel> getLoyaltyStats(int learnerId);
   Future<List<EncounterModel>> getUpcomingEncounters(int learnerId);
+  Future<List<EncounterModel>> getEncounterHistory(int learnerId); // Nuevo
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
-  final Dio dio; 
+  final http.Client client;
+  final TokenStorage tokenStorage; 
 
-  DashboardRemoteDataSourceImpl({required this.dio});
+  DashboardRemoteDataSourceImpl({required this.client, required this.tokenStorage});
+
+  // Helper para headers
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await tokenStorage.getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
 
   @override
-  Future<LoyaltyStatsModel> getLoyaltyStats() async {
-    const endpoint = '$baseUrl/loyalty/me';
+  Future<LoyaltyStatsModel> getLoyaltyStats(int learnerId) async {
+    // ... (Tu implementación existente para stats)
+    // Retorno mock por ahora si no tienes el endpoint listo
+    return const LoyaltyStatsModel(points: 450, encountersAttended: 15); 
+  }
 
-    try {
-      // Dio ya incluye el token gracias al AuthInterceptor configurado
-      final response = await dio.get(endpoint);
+  @override
+  Future<List<EncounterModel>> getUpcomingEncounters(int learnerId) async {
+    final headers = await _getHeaders();
+    final response = await client.get(
+      Uri.parse('$baseUrl/encounters/learner/$learnerId/upcoming'),
+      headers: headers,
+    );
 
-      if (response.statusCode == 200) {
-        return LoyaltyStatsModel.fromJson(response.data);
-      } else {
-        // Si el status no es 200 (ej. 404 porque no tiene cuenta de lealtad aún),
-        // devolvemos valores en cero para no bloquear la UI.
-        return const LoyaltyStatsModel(points: 0, encountersAttended: 0);
-      }
-    } catch (e) {
-      // Si ocurre un error de conexión o del servidor, devolvemos stats vacíos
-      print("⚠️ Error obteniendo stats (usando default): $e");
-      return const LoyaltyStatsModel(points: 0, encountersAttended: 0);
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = json.decode(response.body);
+      return jsonList.map((e) => EncounterModel.fromJson(e)).toList();
+    } else {
+      throw ServerException();
     }
   }
 
-@override
-  Future<List<EncounterModel>> getUpcomingEncounters(int learnerId) async {
-    // Usamos un endpoint específico para las reservas de ESTE alumno
-    final endpoint = '$baseUrl/encounters/learner/$learnerId/upcoming'; 
+  @override
+  Future<List<EncounterModel>> getEncounterHistory(int learnerId) async {
+    final headers = await _getHeaders();
+    final response = await client.get(
+      Uri.parse('$baseUrl/encounters/learner/$learnerId/history'),
+      headers: headers,
+    );
 
-    try {
-      final response = await dio.get(endpoint);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonList = response.data;
-        return jsonList.map((json) => EncounterModel.fromJson(json)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      print("⚠️ Error obteniendo reservas: $e");
-      return [];
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = json.decode(response.body);
+      return jsonList.map((e) => EncounterModel.fromJson(e)).toList();
+    } else {
+      throw ServerException();
     }
   }
 }

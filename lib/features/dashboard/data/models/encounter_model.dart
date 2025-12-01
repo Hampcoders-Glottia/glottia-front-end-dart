@@ -5,22 +5,26 @@ class EncounterModel extends Encounter {
     required super.id,
     required super.topic,
     required super.language,
+    required super.level,
     required super.scheduledAt,
     required super.venueName,
-    required super.status,
+    required super.venueAddress,
+    super.currentParticipants,
+    required super.maxCapacity,
   });
 
   factory EncounterModel.fromJson(Map<String, dynamic> json) {
     return EncounterModel(
       id: json['id'],
-      topic: json['topic'],
-      language: json['language'],
-      // El backend devuelve un array o string para la fecha, Dart parsea ISO-8601
+      topic: json['topic'] ?? 'Sin tema',
+      language: json['language'] ?? 'N/A',
+      level: json['level'] ?? 'N/A',
       scheduledAt: DateTime.parse(json['scheduledAt']),
-      // OJO: Tu EncounterResource devuelve venueId, no el nombre del venue.
-      // Por ahora pondremos un placeholder hasta que hagamos el fetch del Venue.
-      venueName: 'Venue #${json['venueId']}', 
-      status: json['status'],
+      // Mapeo de los nuevos campos del backend
+      venueName: json['venueName'] ?? 'Ubicación desconocida',
+      venueAddress: json['venueAddress'] ?? '',
+      currentParticipants: (json['attendances'] as List?)?.length ?? 0,
+      maxCapacity: json['maxCapacity'] ?? 4,
     );
   }
 }
