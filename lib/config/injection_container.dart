@@ -98,7 +98,7 @@ Future<void> init() async {
 
   // Data Sources
   sl.registerLazySingleton<DashboardRemoteDataSource>(
-    () => DashboardRemoteDataSourceImpl(dio: sl()),
+    () => DashboardRemoteDataSourceImpl(client: sl(), tokenStorage: sl()),
   );
 
   // Repositories
@@ -112,10 +112,7 @@ Future<void> init() async {
 
   // BLoC
   sl.registerFactory(
-    () => DashboardBloc(
-      getLearnerStats: sl(),
-      getUpcomingEncounters: sl(),
-    ), 
+    () => DashboardBloc(repository: sl()),
   );
 
   //! Features - Encounters (Reservas)

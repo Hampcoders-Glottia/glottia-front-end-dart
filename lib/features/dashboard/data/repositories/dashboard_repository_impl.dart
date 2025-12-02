@@ -13,9 +13,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Future<Either<Failure, LoyaltyStats>> getLearnerStats() async {
+    final learnerId = 1; // Reemplaza con el ID real del aprendiz
     try {
       // En producción: final token = await localDataSource.getToken();
-      final result = await remoteDataSource.getLoyaltyStats();
+      final result = await remoteDataSource.getLoyaltyStats(learnerId); // Usar el learnerId adecuado
       return Right(result);
     } on ServerFailure {
       return Left(ServerFailure());
@@ -30,6 +31,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final result = await remoteDataSource.getUpcomingEncounters(learnerId);
       return Right(result);
     } on ServerFailure {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Encounter>>> getEncounterHistory(int learnerId) async {
+    try {
+      final result = await remoteDataSource.getEncounterHistory(learnerId);
+      return Right(result);
+    } catch (e) {
       return Left(ServerFailure());
     }
   }
