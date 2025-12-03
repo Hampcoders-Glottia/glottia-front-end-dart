@@ -1,145 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../config/injection_container.dart';
-import '../bloc/encounter/encounter_bloc.dart';
-import '../../domain/entities/encounter.dart';
+import 'package:mobile_frontend/config/theme/app_colors.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/pages/encounter_feedback_screen.dart';
+import '../bloc/dashboard/dashboard_bloc.dart';
+import '../bloc/dashboard/dashboard_event.dart';
+import '../bloc/dashboard/dashboard_state.dart';
+import '../widgets/encounter_card.dart';
+import '../widgets/skeleton_loading.dart';
 
-class LearnerReservationsScreen extends StatelessWidget {
+class LearnerReservationsScreen extends StatefulWidget {
   final int learnerId;
-
   const LearnerReservationsScreen({super.key, required this.learnerId});
 
   @override
+  State<LearnerReservationsScreen> createState() => _LearnerReservationsScreenState();
+}
+
+class _LearnerReservationsScreenState extends State<LearnerReservationsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    // Cargamos datos al entrar si no están cargados
+    context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // Cargar reservas al entrar
-      create: (_) => sl<EncounterBloc>()..add(LoadMyReservations(learnerId)),
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: const Text("Mis Reservas", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text("Mis Reservas", style: TextStyle(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          automaticallyImplyLeading: false, // Sin flecha atrás en navegación principal
-          backgroundColor: Colors.white,
-          elevation: 0,
-        ),
-        body: BlocBuilder<EncounterBloc, EncounterState>(
-          builder: (context, state) {
-            if (state is EncounterLoading) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFFFE724C)));
-            } else if (state is MyReservationsLoaded) {
-              if (state.encounters.isEmpty) {
-                return _buildEmptyState();
-              }
-              return ListView.separated(
-                padding: const EdgeInsets.all(20),
-                itemCount: state.encounters.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 15),
-                itemBuilder: (context, index) {
-                  return _buildReservationCard(state.encounters[index]);
-                },
-              );
-            } else if (state is EncounterFailure) {
-              return Center(child: Text("Error: ${state.message}"));
-            }
-            return const SizedBox.shrink();
-          },
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: kPrimaryBlue,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: kPrimaryBlue,
+          tabs: const [
+            Tab(text: "Próximas"),
+            Tab(text: "Historial"),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildReservationCard(Encounter encounter) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Row(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // Fecha grande (Estilo Ticket)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFE724C).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  encounter.scheduledAt.day.toString(),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFE724C)),
-                ),
-                const Text("DIC", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFFFE724C))),
-              ],
-            ),
-          ),
-          const SizedBox(width: 15),
-          
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  encounter.topic,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${encounter.language} • Nivel ${encounter.topic}",
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${encounter.scheduledAt.hour}:00",
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-          
-          // Estado (Badge)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: const Text(
-              "Confirmado",
-              style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-          )
+          _buildList(isHistory: false), // Pestaña Próximas
+          _buildList(isHistory: true),  // Pestaña Historial
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+// Widget reutilizable para ambas listas
+  Widget _buildList({required bool isHistory}) {
+    return BlocBuilder<DashboardBloc, DashboardState>(
+      builder: (context, state) {
+        if (state is DashboardLoading) {
+          return const Padding(padding: EdgeInsets.all(20), child: SkeletonLoading());
+        } else if (state is DashboardLoaded) {
+          // ✅ Seleccionamos la lista correcta según la pestaña
+          final encounters = isHistory ? state.history : state.reservations;
+          
+          if (encounters.isEmpty) {
+            return _buildEmptyState(
+              isHistory ? "No tienes clases pasadas" : "No tienes próximas clases",
+              isHistory ? Icons.history : Icons.calendar_today_outlined,
+            );
+          }
+          
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: encounters.length,
+            itemBuilder: (context, index) {
+              return EncounterCard(
+                encounter: encounters[index],
+                onTap: isHistory ? () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_)=> EncounterFeedbackScreen(encounter: encounters[index])));
+                } : null,
+                );
+            },
+          );
+        } else if (state is DashboardError) {
+           return Center(child: Text(state.message));
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.calendar_today_outlined, size: 60, color: Colors.grey),
-          SizedBox(height: 20),
-          Text("No tienes reservas activas", style: TextStyle(fontSize: 16, color: Colors.grey)),
+        children: [
+          Icon(icon, size: 60, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(message, style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
         ],
       ),
     );

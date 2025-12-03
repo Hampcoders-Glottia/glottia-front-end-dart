@@ -1,17 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/get_learner_stats.dart';
-import '../../../domain/usecases/get_upcoming_encounters.dart';
+import '../../../domain/repositories/dashboard_repository.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
-  final GetLearnerStats getLearnerStats;
-  final GetUpcomingEncounters getUpcomingEncounters;
+  final DashboardRepository repository;
 
-  DashboardBloc({
-    required this.getLearnerStats,
-    required this.getUpcomingEncounters,
-  }) : super(DashboardInitial()) {
+  DashboardBloc({required this.repository}) : super(DashboardInitial()) {
     on<LoadDashboardData>(_onLoadDashboardData);
   }
 
@@ -21,36 +16,37 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(DashboardLoading());
 
-    // Ejecutamos ambas peticiones en paralelo para optimizar tiempo
+    // Ejecutamos las 3 llamadas en paralelo para mayor velocidad
     final results = await Future.wait([
-      getLearnerStats(event.learnerId),
-      getUpcomingEncounters(event.learnerId),
+      repository.getLearnerStats(),
+      repository.getUpcomingEncounters(event.learnerId),
+      repository.getEncounterHistory(event.learnerId), // Llamada nueva
     ]);
 
-    // Resultados individuales (son de tipo Either)
-    final statsResult = results[0]; 
-    final encountersResult = results[1];
+    final statsResult = results[0] as dynamic; // Cast necesario por Future.wait genérico
+    final upcomingResult = results[1] as dynamic;
+    final historyResult = results[2] as dynamic;
 
-    // Verificamos el resultado de las Estadísticas
+    // Lógica simple: Si falla stats o upcoming, mostramos error. 
+    // Si falla historial, podríamos mostrar lista vacía (opcional).
     statsResult.fold(
-      (failure) {
-        // Si falla, emitimos error
-        emit(const DashboardError(message: "No se pudieron cargar las estadísticas."));
-      },
+      (failure) => emit(const DashboardError("Error cargando estadísticas")),
       (stats) {
-        // Si las estadísticas cargaron bien, verificamos los Encuentros
-        encountersResult.fold(
-          (failure) {
-            // Si fallan los encuentros, emitimos error
-            emit(const DashboardError(message: "No se pudieron cargar los encuentros."));
-          },
-          (encounters) {
-            // ¡ÉXITO TOTAL! Ambos cargaron correctamente
-            // Casteamos explícitamente para que Dart no se queje
-            emit(DashboardLoaded(
-              stats: stats as dynamic, 
-              reservations: encounters as dynamic,
-            ));
+        upcomingResult.fold(
+          (failure) => emit(const DashboardError("Error cargando reservas")),
+          (upcoming) {
+             historyResult.fold(
+               (failure) => emit(DashboardLoaded(
+                 stats: stats, 
+                 reservations: upcoming,
+                 history: const [] // Fallback seguro para historial
+               )), 
+               (history) => emit(DashboardLoaded(
+                 stats: stats, 
+                 reservations: upcoming,
+                 history: history // ✅ Datos reales
+               )),
+             );
           },
         );
       },

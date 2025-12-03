@@ -43,7 +43,7 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
   final _topicController = TextEditingController();
 
   // Estado del formulario
-  DateTime _selectedDate = DateTime.now().add(const Duration(hours: 1));
+  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1)).copyWith(hour: 18, minute: 0);
   TimeOfDay _selectedTime = const TimeOfDay(hour: 18, minute: 0);
   int _guestCount = 4; // Por defecto según backend minCapacity
   String _selectedLanguageLabel = 'Inglés';
@@ -73,15 +73,16 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
+      print('Evento CreateEncounterPressed enviado con topic: ${_topicController.text}'); // Agregar aquí
       context.read<EncounterBloc>().add(CreateEncounterPressed(
-            creatorId: widget.learnerId,
-            venueId: widget.venue['venueId'], // Usamos el ID del mapa
-            topic: _topicController.text,
-            language: _languageMap[_selectedLanguageLabel]!,
-            level: _selectedLevel,
-            date: _selectedDate,
-            time: _selectedTime,
-          ));
+        creatorId: widget.learnerId,
+        venueId: widget.venue['venueId'],
+        topic: _topicController.text,
+        language: _languageMap[_selectedLanguageLabel]!,
+        level: _selectedLevel,
+        date: _selectedDate,
+        time: _selectedTime,
+      ));
     }
   }
 
@@ -323,7 +324,7 @@ class _CreateEncounterViewState extends State<_CreateEncounterView> {
           context: context,
           initialDate: _selectedDate,
           firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 30)),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
         );
         if (picked != null) setState(() => _selectedDate = picked);
       },

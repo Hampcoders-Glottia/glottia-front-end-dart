@@ -27,19 +27,40 @@ class CreateEncounterPressed extends EncounterEvent {
 
 }
 
+// Modificado: evento de búsqueda con más filtros y paginación
 class SearchEncountersRequested extends EncounterEvent {
   final String? date;
   final int? languageId;
+  final int? cefrLevelId;
+  final String? topic;
+  final String? location;
+  final int page;
+  final int size;
 
-  const SearchEncountersRequested({this.date, this.languageId});
+  const SearchEncountersRequested({
+    this.date,
+    this.languageId,
+    this.cefrLevelId,
+    this.topic,
+    this.location,
+    this.page = 0,
+    this.size = 10,
+  });
 
   @override
-  List<Object> get props => [date ?? '', languageId ?? 0];
+  List<Object> get props => [date ?? '', languageId ?? 0, cefrLevelId ?? 0, topic ?? '', location ?? '', page, size];
 }
 
 class LoadMyReservations extends EncounterEvent {
   final int learnerId;
   const LoadMyReservations(this.learnerId);
+  @override
+  List<Object> get props => [learnerId];
+}
+
+class LoadEncountersByLearnerRequested extends EncounterEvent {
+  final int learnerId;
+  const LoadEncountersByLearnerRequested(this.learnerId);
   @override
   List<Object> get props => [learnerId];
 }

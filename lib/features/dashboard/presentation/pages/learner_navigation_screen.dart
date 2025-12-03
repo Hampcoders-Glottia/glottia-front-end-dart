@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'learner_home_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile_frontend/config/theme/app_colors.dart';
+import '../../../../config/injection_container.dart';
+import '../bloc/dashboard/dashboard_bloc.dart';
+import '../bloc/dashboard/dashboard_event.dart';
+import '../bloc/encounter/encounter_bloc.dart';
+import 'learner_dashboard_screen.dart';
 import 'learner_profile_screen.dart';
 import 'learner_reservations_screen.dart';
+import 'search_encounters_screen.dart';
 
 class LearnerNavigationScreen extends StatefulWidget {
   final int learnerId;
@@ -13,35 +20,94 @@ class LearnerNavigationScreen extends StatefulWidget {
 
 class _LearnerNavigationScreenState extends State<LearnerNavigationScreen> {
   int _currentIndex = 0;
-  late final List<Widget> _screens;
+  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      LearnerHomeScreen(learnerId: widget.learnerId),
+    _pages = [
+      LearnerDashboardScreen(learnerId: widget.learnerId),
       LearnerReservationsScreen(learnerId: widget.learnerId),
-      const Center(child: Text("Chat - Próximamente")), // Placeholder
+      SearchEncountersScreen(learnerId: widget.learnerId), // NUEVO: tercera posición
       LearnerProfileScreen(learnerId: widget.learnerId),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFFE724C),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explorar'),
-          BottomNavigationBarItem(icon: Icon(Icons.confirmation_number), label: 'Reservas'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DashboardBloc>(
+          create: (context) => sl<DashboardBloc>()
+            ..add(LoadDashboardData(widget.learnerId)),
+        ),
+        BlocProvider<EncounterBloc>(
+          create: (context) => sl<EncounterBloc>()
+            ..add(LoadEncountersByLearnerRequested(widget.learnerId)),
+        ),
+      ],
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
+        // ELIMINADO: floatingActionButtonLocation y floatingActionButton
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(color: Colors.black.withAlpha((0.05 * 255).round()), blurRadius: 20),
+            ],
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              navigationBarTheme: NavigationBarThemeData(
+                labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const TextStyle(color: Colors.white);
+                  }
+                  return const TextStyle(color: Colors.white70);
+                }),
+                iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const IconThemeData(color: Colors.white);
+                  }
+                  return const IconThemeData(color: Colors.white);
+                }),
+              ),
+            ),
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() => _currentIndex = index);
+            },
+            backgroundColor: navBarColor,
+            indicatorColor: kPrimaryBlue.withAlpha((0.1 * 255).round()),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home, color: Colors.white),
+                label: 'Inicio',
+
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month, color: Colors.white),
+                label: 'Reservas',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.search_outlined),
+                selectedIcon: Icon(Icons.search, color: Colors.white),
+                label: 'Buscar',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person, color: Colors.white),
+                label: 'Perfil',
+              ),
+            ],
+          ),
+        ),
+      ),
       ),
     );
   }

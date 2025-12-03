@@ -16,6 +16,7 @@ class SearchEncounters implements UseCase<List<Encounter>, SearchEncountersParam
       location: params.location,
       languageId: params.languageId,
       cefrLevelId: params.cefrLevelId,
+      topic: params.topic,
       page: params.page,
       size: params.size,
     );
@@ -27,6 +28,7 @@ class SearchEncountersParams {
   final String? location;
   final int? languageId;
   final int? cefrLevelId;
+  final String? topic; // NUEVO
   final int page;
   final int size;
 
@@ -35,6 +37,7 @@ class SearchEncountersParams {
     this.location,
     this.languageId,
     this.cefrLevelId,
+    this.topic,
     this.page = 0,
     this.size = 10,
   });

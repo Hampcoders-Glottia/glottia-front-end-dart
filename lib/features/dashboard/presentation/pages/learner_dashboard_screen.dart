@@ -2,14 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
-import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
-import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_event.dart';
-import '../../../venue/presentation/pages/venue_selection_screen.dart';
-import '../../domain/entities/encounter.dart';
-import '../../domain/entities/loyalty_stats.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
+
+// BLoC y Entidades
 import '../bloc/dashboard/dashboard_bloc.dart';
 import '../bloc/dashboard/dashboard_event.dart';
 import '../bloc/dashboard/dashboard_state.dart';
+import '../../domain/entities/encounter.dart';
+import '../../domain/entities/loyalty_stats.dart';
+
+// Pantallas de navegación
+import '../../../venue/presentation/pages/venue_selection_screen.dart';
+import 'gamification_screen.dart';
+import 'encounter_detail_screen.dart';
+import 'notification_screen.dart'; // Asegúrate de haber creado este archivo
+
+// Widgets
+import '../widgets/skeleton_loading.dart';
 
 class LearnerDashboardScreen extends StatefulWidget {
   final int learnerId;
@@ -20,250 +29,162 @@ class LearnerDashboardScreen extends StatefulWidget {
 }
 
 class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
-  @override
-  void initState() {
-    super.initState();
+  // Nota: La carga inicial de datos se maneja preferiblemente en LearnerNavigationScreen
+  // para evitar recargas innecesarias al cambiar de pestaña.
+
+  void _loadData() {
     context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
+    context.read<EncounterBloc>().add(LoadEncountersByLearnerRequested(widget.learnerId));
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Fondo gris muy suave
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          children: [
-            const CircleAvatar(
-              backgroundColor: kPrimaryBlue,
-              child: Icon(Icons.person, color: Colors.white),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Bienvenido de nuevo",
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                Text(
-                  "Estudiante", // Aquí podrías poner el nombre real si lo tienes en el estado
-                  style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black87),
-            onPressed: () {},
-          ),
-          // Button logout
-          IconButton(
-            tooltip: "Cerrar sesión",
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () {
-              context.read<AuthBloc>().add(LogoutRequested());
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-            },
-          )
-        ],
-      ),
-      body: BlocBuilder<DashboardBloc, DashboardState>(
-        builder: (context, state) {
-          if (state is DashboardLoading) {
-            return const Center(child: CircularProgressIndicator(color: kPrimaryBlue));
-          } else if (state is DashboardError) {
-            return _buildErrorState(state.message);
-          } else if (state is DashboardLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async => context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId)),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+      backgroundColor: backgroundDefault,
+      body: RefreshIndicator(
+        onRefresh: () async => _loadData(),
+        color: kPrimaryBlue,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _buildAppBar(context),
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Tarjeta de Puntos (Gamificación)
-                    _LoyaltyCard(stats: state.stats),
-                    
-                    const SizedBox(height: 25),
-
-                    // 2. Título de Sección
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Tus Próximas Clases",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        TextButton(
-                          onPressed: () {}, // Navegar a historial completo
-                          child: const Text("Ver todas"),
-                        )
-                      ],
+                    // Tarjeta de Loyalty
+                    BlocBuilder<DashboardBloc, DashboardState>(
+                      builder: (context, state) {
+                        if (state is DashboardLoaded) {
+                          return _LoyaltyCard(stats: state.stats);
+                        }
+                        return const SizedBox.shrink();
+                      },
                     ),
-                    
-                    const SizedBox(height: 10),
-
-                    // 3. Lista de Encuentros
-                    if (state.reservations.isEmpty)
-                      _buildEmptyState()
-                    else
-                      ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: state.reservations.length,
-                        separatorBuilder: (c, i) => const SizedBox(height: 15),
-                        itemBuilder: (context, index) {
-                          return _EncounterCard(encounter: state.reservations[index]);
-                        },
-                      ),
+                    const SizedBox(height: 30),
+                    const Text(
+                      "Tus Próximos Encuentros",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 15),
+                    // CAMBIO: Usar EncounterBloc en lugar de DashboardBloc para los encuentros
+                    BlocBuilder<EncounterBloc, EncounterState>(
+                      builder: (context, state) {
+                        if (state is EncounterLoading) {
+                          return const SkeletonLoading();
+                        } else if (state is EncounterFailure) {
+                          return _buildErrorState(state.message);
+                        } else if (state is EncounterSearchSuccess) {
+                          if (state.encounters.isEmpty) {
+                            return _buildEmptyState();
+                          }
+                          return Column(
+                            children: state.encounters
+                                .map((e) => _EncounterCard(encounter: e))
+                                .toList(),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+            ),
+          ],
+        ),
       ),
-      // Botón Flotante para Acción Principal
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          // 1. Primero vamos a la selección de local
-          Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => VenueSelectionScreen(learnerId: widget.learnerId),
-          ),
-          ).then((_) {
-            // 2. Cuando regrese (después de reservar), recargamos el dashboard
-            context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
-          });
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => VenueSelectionScreen(learnerId: widget.learnerId)),
+          ).then((_) => _loadData());
         },
         backgroundColor: kPrimaryBlue,
-        icon: const Icon(Icons.add_location_alt_outlined, color: Colors.white),
-        label: const Text("Reservar Mesa", style: TextStyle(color: Colors.white)),
+        label: const Text("Reservar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-          const SizedBox(height: 10),
-          Text(message, textAlign: TextAlign.center),
-          TextButton(
-            onPressed: () => context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId)),
-            child: const Text("Reintentar"),
-          )
-        ],
+  Widget _buildAppBar(BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: 80.0,
+      floating: true,
+      pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+        title: const Text(
+          "Hola, Estudiante", 
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
+      actions: [
+        IconButton(
+          icon: Stack(
+            children: [
+              const Icon(Icons.notifications_none_rounded, color: Colors.black87, size: 28),
+              // Puntito rojo de notificación (simulado)
+              Positioned(
+                right: 2,
+                top: 2,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
+                ),
+              )
+            ],
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationScreen()),
+            );
+          },
+        ),
+        const SizedBox(width: 10),
+      ],
     );
   }
 
   Widget _buildEmptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(30),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: const [
-          Icon(Icons.calendar_today_outlined, size: 40, color: Colors.grey),
-          SizedBox(height: 15),
-          Text(
-            "No tienes clases programadas",
-            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-          ),
-          Text(
-            "¡Reserva una mesa para practicar!",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
+          Icon(Icons.event_busy, size: 60, color: Colors.grey),
+          SizedBox(height: 16),
+          Text("Sin reservas activas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text("¡Reserva tu primera mesa hoy!", style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
-}
-
-// --- WIDGETS INTERNOS ---
-
-class _LoyaltyCard extends StatelessWidget {
-  final LoyaltyStats stats;
-
-  const _LoyaltyCard({required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4A6FA5), Color(0xFF6B8DD6)], // Tonos de tu kPrimaryBlue
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimaryBlue.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Tus Puntos Glottia",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                "${stats.points}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "Nivel: Principiante", // Placeholder, backend podría enviarlo
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              )
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.emoji_events, color: Colors.white, size: 40),
-          ),
+          const Icon(Icons.error_outline, color: Colors.red, size: 40),
+          const SizedBox(height: 10),
+          Text(message),
+          TextButton(onPressed: _loadData, child: const Text("Reintentar"))
         ],
       ),
     );
@@ -272,101 +193,130 @@ class _LoyaltyCard extends StatelessWidget {
 
 class _EncounterCard extends StatelessWidget {
   final Encounter encounter;
-
   const _EncounterCard({required this.encounter});
 
   @override
   Widget build(BuildContext context) {
-    // Formateadores de fecha
-    final dateStr = DateFormat('d MMM', 'es_ES').format(encounter.scheduledAt);
-    final timeStr = DateFormat('h:mm a').format(encounter.scheduledAt);
+    // Formateo seguro de fechas
+    final day = DateFormat('dd').format(encounter.scheduledAt);
+    final month = DateFormat('MMM', 'es_ES').format(encounter.scheduledAt).toUpperCase();
+    final time = DateFormat('h:mm a').format(encounter.scheduledAt);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        // Navegación al detalle del encuentro
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => EncounterDetailScreen(encounter: encounter)),
+        ).then((_) {
+          // Opcional: Recargar al volver por si canceló la reserva
+          context.read<DashboardBloc>().add(LoadDashboardData(encounter.id)); 
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: kPrimaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: [
+                  Text(day, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kPrimaryBlue)),
+                  Text(month, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kPrimaryBlue)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(encounter.topic, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.translate, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text("${encounter.language} - ${encounter.venueName}", style: const TextStyle(color: Colors.grey, fontSize: 13), overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time_filled, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(time, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          // Columna de Fecha
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: kPrimaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
+    );
+  }
+}
+
+class _LoyaltyCard extends StatelessWidget {
+  final LoyaltyStats stats;
+  const _LoyaltyCard({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => GamificationScreen(stats: stats)),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4A6FA5), Color(0xFF5B7FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFF5B7FFF).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  dateStr.split(' ')[0], // Día
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold, 
-                    fontSize: 20, 
-                    color: kPrimaryBlue
-                  ),
-                ),
-                Text(
-                  dateStr.split(' ')[1].toUpperCase(), // Mes
-                  style: const TextStyle(
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w600, 
-                    color: kPrimaryBlue
-                  ),
-                ),
+                const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 32),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Text("Nivel Básico", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                )
               ],
             ),
-          ),
-          const SizedBox(width: 16),
-          
-          // Detalles
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  encounter.topic,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.translate, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${encounter.language} • ${encounter.venueName}",
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      timeStr,
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // Icono de Estado o Flecha
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        ],
+            const SizedBox(height: 20),
+            Text("${stats.points}", style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold, height: 1)),
+            const Text("Puntos acumulados", style: TextStyle(color: Colors.white70, fontSize: 14)),
+          ],
+        ),
       ),
     );
   }

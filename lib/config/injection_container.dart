@@ -39,6 +39,7 @@ import '../features/venue/domain/usecases/create_promotion.dart';
 import '../features/venue/domain/usecases/get_venue_promotions.dart';
 import '../features/venue/presentation/bloc/promotion/promotion_bloc.dart';
 import '../features/venue/presentation/bloc/venue/venue_bloc.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 final sl = GetIt.instance;
 
@@ -104,7 +105,7 @@ Future<void> init() async {
 
   // Data Sources
   sl.registerLazySingleton<DashboardRemoteDataSource>(
-    () => DashboardRemoteDataSourceImpl(dio: sl()),
+    () => DashboardRemoteDataSourceImpl(client: sl(), tokenStorage: sl()),
   );
 
   // Repositories
@@ -118,10 +119,7 @@ Future<void> init() async {
 
   // BLoC
   sl.registerFactory(
-    () => DashboardBloc(
-      getLearnerStats: sl(),
-      getUpcomingEncounters: sl(),
-    ), 
+    () => DashboardBloc(repository: sl()),
   );
 
   //! Features - Encounters (Reservas)
@@ -143,7 +141,12 @@ Future<void> init() async {
   // BLoC Encounter
   // Usamos registerFactory para que se cree uno nuevo cada vez que entramos a la pantalla
   sl.registerFactory(
-    () => EncounterBloc(createEncounter: sl(), searchEncounters: sl(), getUpcomingEncounters: sl()),
+        () => EncounterBloc(
+      createEncounter: sl(),
+      searchEncounters: sl(),
+      getUpcomingEncounters: sl(),
+      repository: sl(), // AGREGAR esta línea
+    ),
   );
 
   //! Features - Restaurant (Venue)
@@ -154,6 +157,7 @@ Future<void> init() async {
   // BLoC Venue
   // Usamos registerFactory para que no guarde estado entre pantallas (Owner vs Selection)
   sl.registerFactory(() => VenueBloc(venueRemoteDataSource: sl()));
+<<<<<<< HEAD
 
   // Features - Promotions
   sl.registerFactory(() => PromotionBloc(getVenuePromotions: sl(), createPromotion: sl()));
@@ -162,3 +166,20 @@ Future<void> init() async {
   sl.registerLazySingleton<PromotionRepository>(() => PromotionRepositoryImpl(remoteDataSource: sl()));
   sl.registerLazySingleton<PromotionRemoteDataSource>(() => PromotionRemoteDataSourceImpl(client: sl(), tokenStorage: sl()));
 }
+=======
+}
+
+final dio = Dio(
+  BaseOptions(
+    baseUrl: 'http://10.0.2.2:8092/api/v1'
+  ),
+)..interceptors.add(PrettyDioLogger(
+  requestHeader: true,
+  requestBody: true,
+  responseBody: true,
+  responseHeader: false,
+  error: true,
+  compact: true,
+  maxWidth: 90,
+));
+>>>>>>> develop

@@ -10,7 +10,10 @@ abstract class EncounterRepository {
     String? location,
     int? languageId,
     int? cefrLevelId,
+    String? topic, // NUEVO
     int page = 0,
     int size = 10,
   });
+  Future<Either<Failure, List<Encounter>>> getEncountersByLearnerId(int learnerId); // NUEVO
+
 }
