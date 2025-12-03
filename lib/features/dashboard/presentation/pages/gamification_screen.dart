@@ -1,10 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../config/injection_container.dart' as di;
+import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/loyalty_stats.dart';
+import '../../domain/entities/loyalty_transaction.dart';
+import '../bloc/loyalty/loyalty_bloc.dart';
+import '../bloc/loyalty/loyalty_event.dart';
+import '../bloc/loyalty/loyalty_state.dart';
 
-class GamificationScreen extends StatelessWidget {
+class GamificationScreen extends StatefulWidget {
   final LoyaltyStats stats;
+  final int learnerId;
 
-  const GamificationScreen({super.key, required this.stats});
+  const GamificationScreen({
+    super.key,
+    required this.stats,
+    required this.learnerId,
+  });
+
+  @override
+  State<GamificationScreen> createState() => _GamificationScreenState();
+}
+
+class _GamificationScreenState extends State<GamificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Cargar historial de puntos al iniciar la pantalla
+    context.read<LoyaltyBloc>().add(LoadPointsHistory(learnerId: widget.learnerId));
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -18,16 +43,9 @@ class GamificationScreen extends StatelessWidget {
       {'name': 'Viajero', 'icon': Icons.flight_takeoff, 'unlocked': false, 'desc': 'Visita 5 Venues diferentes.'},
     ];
 
-    // Mock de Historial de Puntos
-    final List<Map<String, dynamic>> history = [
-      {'action': 'Check-in: Starbucks Larcomar', 'points': '+50', 'date': 'Hoy'},
-      {'action': 'Reserva completada', 'points': '+100', 'date': 'Ayer'},
-      {'action': 'Bono de bienvenida', 'points': '+300', 'date': 'Hace 1 semana'},
-    ];
-
     // Cálculo simple de progreso (Ej: Cada nivel son 1000 puntos)
-    double progress = (stats.points % 1000) / 1000;
-    int nextLevelPoints = 1000 - (stats.points % 1000);
+    double progress = (widget.stats.points % 1000) / 1000;
+    int nextLevelPoints = 1000 - (widget.stats.points % 1000);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -61,11 +79,11 @@ class GamificationScreen extends StatelessWidget {
                   const Icon(Icons.emoji_events, color: Colors.amber, size: 60),
                   const SizedBox(height: 10),
                   Text(
-                    "Nivel Actual: Básico", // Podrías mapear stats.level aquí
+                    "Nivel Actual: Básico",
                     style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    "${stats.points} Puntos Totales",
+                    "${widget.stats.points} Puntos Totales",
                     style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
                   ),
                   const SizedBox(height: 24),
@@ -113,38 +131,96 @@ class GamificationScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // 3. Historial de Puntos
+            // 3. Historial de Puntos - Ahora con datos del BLoC
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: const Text("Historial de Puntos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
-            ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: history.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final item = history[index];
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
-                    child: const Icon(Icons.add, color: Colors.green, size: 20),
-                  ),
-                  title: Text(item['action'], style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(item['date'], style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                  trailing: Text(
-                    item['points'],
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                );
+            BlocBuilder<LoyaltyBloc, LoyaltyState>(
+              builder: (context, state) {
+                if (state is LoyaltyLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                } else if (state is LoyaltyError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                } else if (state is LoyaltyLoaded) {
+                  if (state.transactions.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No hay transacciones aún',
+                        style: TextStyle(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: state.transactions.length,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemBuilder: (context, index) {
+                      final transaction = state.transactions[index];
+                      return _buildTransactionItem(transaction);
+                    },
+                  );
+                }
+                return const SizedBox.shrink();
               },
             ),
             const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(LoyaltyTransaction transaction) {
+    final bool isPositive = transaction.points > 0;
+    final pointsText = isPositive ? '+${transaction.points}' : '${transaction.points}';
+    final formattedDate = DateFormatter.formatRelativeDate(transaction.createdAt);
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          isPositive ? Icons.add : Icons.remove,
+          color: isPositive ? Colors.green : Colors.red,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        transaction.description,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        formattedDate,
+        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+      ),
+      trailing: Text(
+        pointsText,
+        style: TextStyle(
+          color: isPositive ? Colors.green : Colors.red,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
         ),
       ),
     );

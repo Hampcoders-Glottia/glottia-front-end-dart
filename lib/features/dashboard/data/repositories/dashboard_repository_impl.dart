@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/encounter.dart';
 import '../../domain/entities/loyalty_stats.dart';
+import '../../domain/entities/loyalty_transaction.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_data_source.dart';
 
@@ -39,6 +40,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, List<Encounter>>> getEncounterHistory(int learnerId) async {
     try {
       final result = await remoteDataSource.getEncounterHistory(learnerId);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<LoyaltyTransaction>>> getPointsHistory(int learnerId, {int page = 0, int size = 10}) async {
+    try {
+      final result = await remoteDataSource.getPointsHistory(learnerId, page: page, size: size);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure());

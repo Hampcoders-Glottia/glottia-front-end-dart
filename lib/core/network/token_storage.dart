@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class TokenStorage {
   // Usamos flutter_secure_storage para máxima seguridad
@@ -18,5 +19,32 @@ class TokenStorage {
   // Borrar token al cerrar sesión
   Future<void> deleteToken() async {
     await _storage.delete(key: _tokenKey);
+  }
+
+  Future<Map<String, dynamic>?> decodeToken() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) return null;
+
+    try {
+      return JwtDecoder.decode(token);
+    } catch (e) {
+      print('Error decodificando token: $e');
+      return null;
+    }
+  }
+
+  /// Extrae un campo específico del token decodificado
+  Future<T?> getTokenField<T>(String fieldName) async {
+    final decoded = await decodeToken();
+    return decoded?[fieldName] as T?;
+  }
+
+  /// Obtiene el learnerId del token
+  Future<int?> getLearnerId() async {
+    return await getTokenField<int>('learnerId');
+  }
+
+  Future<int?> getPartnerrId() async {
+    return await getTokenField<int>('partnerId');
   }
 }

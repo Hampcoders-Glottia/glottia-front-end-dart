@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
 import 'package:mobile_frontend/features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
+import '../../../../config/injection_container.dart' as di;
 
 // BLoC y Entidades
 import '../bloc/dashboard/dashboard_bloc.dart';
 import '../bloc/dashboard/dashboard_event.dart';
 import '../bloc/dashboard/dashboard_state.dart';
+import '../bloc/loyalty/loyalty_bloc.dart';
 import '../../domain/entities/encounter.dart';
 import '../../domain/entities/loyalty_stats.dart';
 
@@ -59,7 +61,7 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
                     BlocBuilder<DashboardBloc, DashboardState>(
                       builder: (context, state) {
                         if (state is DashboardLoaded) {
-                          return _LoyaltyCard(stats: state.stats);
+                          return _LoyaltyCard(stats: state.stats, learnerId: widget.learnerId);
                         }
                         return const SizedBox.shrink();
                       },
@@ -273,7 +275,12 @@ class _EncounterCard extends StatelessWidget {
 
 class _LoyaltyCard extends StatelessWidget {
   final LoyaltyStats stats;
-  const _LoyaltyCard({required this.stats});
+  final int learnerId;
+
+  const _LoyaltyCard({
+    required this.stats,
+    required this.learnerId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -281,7 +288,15 @@ class _LoyaltyCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => GamificationScreen(stats: stats)),
+          MaterialPageRoute(
+            builder: (_) => BlocProvider(
+              create: (_) => di.sl<LoyaltyBloc>(),
+              child: GamificationScreen(
+                stats: stats,
+                learnerId: learnerId,
+              ),
+            ),
+          ),
         );
       },
       child: Container(
@@ -289,13 +304,18 @@ class _LoyaltyCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4A6FA5), Color(0xFF5B7FFF)],
+            colors: [
+              Color(0xFF667EEA), // Azul vibrante
+              Color(0xFF764BA2), // Púrpura
+              Color(0xFFF093FB), // Rosa claro
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
+            stops: [0.0, 0.5, 1.0], // Controla la transición
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: const Color(0xFF5B7FFF).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 8)),
+            BoxShadow(color: const Color(0xFF667EEA).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 8)),
           ],
         ),
         child: Column(

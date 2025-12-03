@@ -23,6 +23,8 @@ import '../features/dashboard/domain/repositories/dashboard_repository.dart';
 import '../features/dashboard/presentation/bloc/dashboard/dashboard_bloc.dart';
 import '../features/dashboard/domain/usecases/get_learner_stats.dart';
 import '../features/dashboard/domain/usecases/get_upcoming_encounters.dart';
+import '../features/dashboard/domain/usecases/get_points_history.dart';
+import '../features/dashboard/presentation/bloc/loyalty/loyalty_bloc.dart';
 
 // Encounter imports
 import '../features/dashboard/domain/usecases/create_encounter.dart';
@@ -110,10 +112,15 @@ Future<void> init() async {
   // Use Cases
   sl.registerLazySingleton(() => GetLearnerStats(sl()));
   sl.registerLazySingleton(() => GetUpcomingEncounters(sl()));
+  sl.registerLazySingleton(() => GetPointsHistory(sl()));
 
   // BLoC
   sl.registerFactory(
     () => DashboardBloc(repository: sl()),
+  );
+
+  sl.registerFactory(
+    () => LoyaltyBloc(getPointsHistory: sl()),
   );
 
   //! Features - Encounters (Reservas)
