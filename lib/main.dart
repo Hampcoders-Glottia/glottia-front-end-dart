@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mobile_frontend/config/theme/app_colors.dart';
 
 // BLoCs
 import 'package:mobile_frontend/features/authentication/presentation/bloc/auth_bloc.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
           fontFamily: 'Roboto',
+            scaffoldBackgroundColor: backgroundDefault
         ),
         initialRoute: '/welcome',
         

@@ -13,10 +13,7 @@ class CreateEncounter implements UseCase<bool, EncounterCreationParams> {
   Future<Either<Failure, bool>> call(EncounterCreationParams params) async {
     // Aquí podrías agregar validaciones de negocio puras antes de llamar al repo
     // Ej: Validar que la fecha no sea en el pasado (aunque la UI lo limite)
-    if (params.scheduledAt.isBefore(DateTime.now())) {
-      return const Left(ValidationFailure("La fecha no puede ser en el pasado"));
-    }
-    
+
     return await repository.createEncounter(params);
   }
 }

@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       validator: (value) {
-                        if (value == null || value.length < 6) return 'Mínimo 6 caracteres';
+                        if (value == null || value.length < 2) return 'Mínimo 2 caracteres';
                         return null;
                       },
                     ),

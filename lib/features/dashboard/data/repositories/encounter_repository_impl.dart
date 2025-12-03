@@ -29,8 +29,9 @@ class EncounterRepositoryImpl implements EncounterRepository {
     String? location,
     int? languageId,
     int? cefrLevelId,
+    String? topic,
     int page = 0,
-    int size = 10
+    int size = 10,
   }) async {
     try {
       // Llama al data source
@@ -39,6 +40,7 @@ class EncounterRepositoryImpl implements EncounterRepository {
         location: location,
         languageId: languageId,
         cefrLevelId: cefrLevelId,
+        topic: topic,
         page: page,
         size: size,
       );
@@ -46,6 +48,18 @@ class EncounterRepositoryImpl implements EncounterRepository {
       return Right(models);
     } catch (e) {
       // Retorna fallo (Left)
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Encounter>>> getEncountersByLearnerId(int learnerId) async {
+    try {
+      final models = await remoteDataSource.getEncountersByLearnerId(learnerId);
+      return Right(models);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
       return Left(ServerFailure());
     }
   }

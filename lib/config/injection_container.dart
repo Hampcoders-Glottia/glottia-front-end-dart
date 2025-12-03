@@ -33,6 +33,7 @@ import '../features/dashboard/data/datasources/encounter_remote_data_source.dart
 // Venue imports
 import '../features/venue/data/datasources/venue_remote_data_source.dart';
 import '../features/venue/presentation/bloc/venue/venue_bloc.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 final sl = GetIt.instance;
 
@@ -134,7 +135,12 @@ Future<void> init() async {
   // BLoC Encounter
   // Usamos registerFactory para que se cree uno nuevo cada vez que entramos a la pantalla
   sl.registerFactory(
-    () => EncounterBloc(createEncounter: sl(), searchEncounters: sl(), getUpcomingEncounters: sl()),
+        () => EncounterBloc(
+      createEncounter: sl(),
+      searchEncounters: sl(),
+      getUpcomingEncounters: sl(),
+      repository: sl(), // AGREGAR esta línea
+    ),
   );
 
   //! Features - Restaurant (Venue)
@@ -146,3 +152,17 @@ Future<void> init() async {
   // Usamos registerFactory para que no guarde estado entre pantallas (Owner vs Selection)
   sl.registerFactory(() => VenueBloc(venueRemoteDataSource: sl()));
 }
+
+final dio = Dio(
+  BaseOptions(
+    baseUrl: 'http://10.0.2.2:8092/api/v1'
+  ),
+)..interceptors.add(PrettyDioLogger(
+  requestHeader: true,
+  requestBody: true,
+  responseBody: true,
+  responseHeader: false,
+  error: true,
+  compact: true,
+  maxWidth: 90,
+));

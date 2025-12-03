@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_frontend/config/theme/app_colors.dart';
+import 'package:mobile_frontend/features/dashboard/presentation/bloc/encounter/encounter_bloc.dart';
 
 // BLoC y Entidades
 import '../bloc/dashboard/dashboard_bloc.dart';
@@ -30,15 +31,17 @@ class LearnerDashboardScreen extends StatefulWidget {
 class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
   // Nota: La carga inicial de datos se maneja preferiblemente en LearnerNavigationScreen
   // para evitar recargas innecesarias al cambiar de pestaña.
-  
+
   void _loadData() {
     context.read<DashboardBloc>().add(LoadDashboardData(widget.learnerId));
+    context.read<EncounterBloc>().add(LoadEncountersByLearnerRequested(widget.learnerId));
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: backgroundDefault,
       body: RefreshIndicator(
         onRefresh: () async => _loadData(),
         color: kPrimaryBlue,
@@ -49,35 +52,46 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: BlocBuilder<DashboardBloc, DashboardState>(
-                  builder: (context, state) {
-                    if (state is DashboardLoading) {
-                      return const SkeletonLoading(); 
-                    } else if (state is DashboardError) {
-                      return _buildErrorState(state.message);
-                    } else if (state is DashboardLoaded) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _LoyaltyCard(stats: state.stats),
-                          const SizedBox(height: 30),
-                          const Text(
-                            "Tus Próximas Clases",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                          ),
-                          const SizedBox(height: 15),
-                          if (state.reservations.isEmpty)
-                            _buildEmptyState()
-                          else
-                            ...state.reservations.map((e) => _EncounterCard(encounter: e)).toList(),
-                          
-                          // Espacio extra para que el FAB no tape contenido
-                          const SizedBox(height: 80),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tarjeta de Loyalty
+                    BlocBuilder<DashboardBloc, DashboardState>(
+                      builder: (context, state) {
+                        if (state is DashboardLoaded) {
+                          return _LoyaltyCard(stats: state.stats);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    const SizedBox(height: 30),
+                    const Text(
+                      "Tus Próximos Encuentros",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 15),
+                    // CAMBIO: Usar EncounterBloc en lugar de DashboardBloc para los encuentros
+                    BlocBuilder<EncounterBloc, EncounterState>(
+                      builder: (context, state) {
+                        if (state is EncounterLoading) {
+                          return const SkeletonLoading();
+                        } else if (state is EncounterFailure) {
+                          return _buildErrorState(state.message);
+                        } else if (state is EncounterSearchSuccess) {
+                          if (state.encounters.isEmpty) {
+                            return _buildEmptyState();
+                          }
+                          return Column(
+                            children: state.encounters
+                                .map((e) => _EncounterCard(encounter: e))
+                                .toList(),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    const SizedBox(height: 80),
+                  ],
                 ),
               ),
             ),
@@ -89,7 +103,7 @@ class _LearnerDashboardScreenState extends State<LearnerDashboardScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => VenueSelectionScreen(learnerId: widget.learnerId)),
-          ).then((_) => _loadData()); // Recargar al volver
+          ).then((_) => _loadData());
         },
         backgroundColor: kPrimaryBlue,
         label: const Text("Reservar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),

@@ -16,3 +16,5 @@ const Color kPrimaryOrange = Color(0xFFFFA726);
 const Color kColorAvailable = Color(0xFFE8F5E9); // Verde claro
 const Color kColorReserved = Color(0xFFFFF3E0); // Naranja claro
 const Color kColorOccupied = Color(0xFFFFEBEE); // Rojo claro
+const Color navBarColor = Color(0xff8350ff);
+const Color backgroundDefault = Color(0xFFF5F7FA);
